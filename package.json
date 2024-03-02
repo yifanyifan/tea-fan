@@ -40,7 +40,12 @@
   },
   "description": "This template should help get you started developing with Vue 3 in Vite.",
   "main": "vite.config.js",
-  "keywords": [],
-  "author": "",
+  "keywords": [
+	"node",
+	"steve",
+	"tea-fan",
+	"DEVELOPERS"
+  ],
+  "author": "yifanyifan",
   "license": "ISC"
 }
