@@ -1,30 +1,31 @@
-# tea-fan
+# 项目名称: dashLook
 
-This template should help get you started developing with Vue 3 in Vite.
+## 项目概述
+该项目旨在提供一个用于查看各种加密货币的实时数据和统计信息的看板。通过使用Vue.js技术栈开发，该项目具有良好的灵活性，可以轻松进行拓展，以适应新的加密货币和功能需求。
 
-## Recommended IDE Setup
+## 目标
+- 提供用户友好的界面，方便用户查看各种加密货币的实时数据和统计信息。
+- 支持无限拓展，使得项目能够随着市场和技术的发展不断增加新的功能和加密货币。
+- 保持数据的准确性和实时性，确保用户获取到最新的加密货币信息。
 
-[VSCode](https://code.visualstudio.com/) + [Volar](https://marketplace.visualstudio.com/items?itemName=Vue.volar) (and disable Vetur) + [TypeScript Vue Plugin (Volar)](https://marketplace.visualstudio.com/items?itemName=Vue.vscode-typescript-vue-plugin).
+## 技术栈
+- Vue.js：用于构建前端用户界面的JavaScript框架，提供了响应式和组件化的开发方式。
+- HTML/CSS：用于定义和设计项目的用户界面。
+- JavaScript：用于实现项目的逻辑和交互功能。
+- API集成：通过使用各种加密货币市场和数据提供商的API，获取实时的加密货币数据。
 
-## Customize configuration
+## 项目特点
+- 可拓展性：项目采用了Vue.js技术栈，使得添加新的功能和加密货币变得非常简单。
+- 实时数据：通过API集成，项目提供了实时的加密货币数据，确保用户获取到最新的信息。
+- 用户友好：项目设计了直观简洁的用户界面，方便用户快速浏览和查找所需信息。
 
-See [Vite Configuration Reference](https://vitejs.dev/config/).
+## 未来拓展计划
+1. 添加更多的加密货币：随着市场的发展，不断增加新的加密货币以满足用户需求。
+2. 实现个性化设置：允许用户根据自己的需求自定义看板的内容和布局。
+3. 提供更多的统计信息：增加各种加密货币的历史数据和图表，帮助用户更好地分析市场走势。
 
-## Project Setup
+## 参与者
+- 项目负责人：Yifan
 
-```sh
-npm install
-```
-
-### Compile and Hot-Reload for Development
-
-```sh
-npm run dev
-```
-
-### Compile and Minify for Production
-
-```sh
-npm run build
-```
-# tea-fan
+## 项目时间表
+- 项目启动日期：2023-05-01
