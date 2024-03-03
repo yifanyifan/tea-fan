@@ -1,6 +1,6 @@
 {
   "name": "tea-fan",
-  "version": "0.0.3",
+  "version": "0.0.4",
   "private": false,
   "scripts": {
     "dev": "vite",
@@ -41,10 +41,10 @@
   "description": "This template should help get you started developing with Vue 3 in Vite.",
   "main": "vite.config.js",
   "keywords": [
-	"node",
-	"steve",
-	"tea-fan",
-	"DEVELOPERS"
+    "node",
+    "steve",
+    "tea-fan",
+    "DEVELOPERS"
   ],
   "author": "yifanyifan",
   "license": "ISC"
