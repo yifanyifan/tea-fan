@@ -27,7 +27,6 @@ requestOkx.interceptors.request.use(function (config) {
     //2023-11-21T14:31:42.224ZGET/api/v5/rubik/stat/contracts/long-short-account-ratio?ccy=BTC
 
     const sign=CryptoJS.enc.Base64.stringify(CryptoJS.HmacSHA256(urlAll, "!!!!!!!!!!!!!!!!!!!!!!"))
-
     config.headers['OK-ACCESS-KEY'] = '!!!!!!!!!!!!!!!!!!!!!!';
     config.headers['OK-ACCESS-SIGN'] = sign;
     config.headers['OK-ACCESS-TIMESTAMP'] = timestamp;
