@@ -14,7 +14,7 @@
 	"bugs": {
 		"url": "https://github.com/yifanyifan/tea-fan/issues"
 	},
-	"homepage": "https://github.com/yifanyifan/tea-fan",
+	"homepage": "https://github.com/yifanyifan/tea-fan/blob/main/package.json",
 	"dependencies": {
 		"@element-plus/icons-vue": "^2.1.0",
 		"axios": "^1.6.1",
