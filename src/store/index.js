@@ -1,4 +1,5 @@
 // src/store/index.js
+import * as a from "tea-cll"
 import { createStore } from "vuex"
 // 导入数据持久化操作的创建函数
 import createPersistedState from "vuex-persistedstate"

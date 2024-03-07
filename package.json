@@ -25,6 +25,7 @@
 		"md5": "^2.3.0",
 		"normalize.css": "^8.0.1",
 		"sass": "^1.69.5",
+		"tea-cll": "^1.0.1",
 		"vue": "^3.3.4",
 		"vue-router": "^4.2.5",
 		"vuex": "^4.0.2",
@@ -40,7 +41,12 @@
 	},
 	"description": "This template should help get you started developing with Vue 3 in Vite.",
 	"main": "vite.config.js",
-	"keywords": ["node", "steve", "tea-fan", "DEVELOPERS"],
+	"keywords": [
+		"node",
+		"steve",
+		"tea-fan",
+		"DEVELOPERS"
+	],
 	"author": "yifanyifan",
 	"license": "ISC"
 }
