@@ -15,74 +15,49 @@ export default {
       password: ''
     }
   },
-  computed: {
-    ...mapState(['count'])
-  },
+  // computed: {
+  //   ...mapState(['count'])
+  // },
   methods: {
-    ...mapMutations(['updateUserInfo']),
-    submitForm() {
-      // console.log("被调用了",this.username,this.password);
-
-      // if(this.username.length < 5){
-      //   //长度不够
-      //   ElMessage.error('管理员账号应大于5位');
-      //   //让代码不再执行
-      //   return
-      // }
-      // if(!/^(?![a-zA-Z]+$)(?![A-Z0-9]+$)(?![A-Z\W_!@#$%^&*`~()-+=]+$)(?![a-z0-9]+$)(?![a-z\W_!@#$%^&*`~()-+=]+$)(?![0-9\W_!@#$%^&*`~()-+=]+$)[a-zA-Z0-9\W_!@#$%^&*`~()-+=]/.test(this.password)) {
-      //   ElMessage.error('密码必须包含：大写字母，小写字母，数字，特殊符号 `@#$%^&*`~()-+=` 中任意3项密码');
-      //   return
-      // };
-
-      //md5是一个加密函数，可以将要加密的字符串传递进去，会返回一个加密好的字符串
-      //console.log(md5('千峰123教育456前端'));
-
-      //发送数据请求
-      //直接请求没有问题，但是如果ip变了就很麻烦
-      // axios.get('http://121.89.205.189:3000/api/pro/list')
-      // .then(res=> {
-      //   console.log(res);
-      // })
-      // .catch(err => {
-      //   console.log(err);
-      // })
-      loginFn({
-        username: this.username,
-        password: this.password
-      }).then(res => {
-        if(res.code != '200') {
-          //未注册
-          ElMessage.error(res.msg)
-          return
-        } else {
-          //第一种修改数据的方法
-          //this.$store.commit('updateUserInfo', res.data);
-          // 第二种修改数据的方法
-          this.updateUserInfo(res.data);
-
-          //将 token 存到本地
-          localStorage.setItem('token', res.data.token);
-
-          // this.$router 是我们的路由对象
-          // .push 需要进入到哪个路由中
-          this.$router.push('/')
-          // console.log(this.$router);
-        }
-      })
-    }
+    //将mutation里的函数映射到组件, 以便在该组件中直接使用
+    // ...mapMutations(['updateUserInfo']),
+    submitFormTea() {
+      // this.$router.push('/')
+      //更新用户登录状态
+      // loginStatus = {"loginStatus": true}
+      // this.$store.commit('updateUserInfo', loginStatus);
+    },
+    // submitForm() {
+    //   //登录
+    //   loginFn({
+    //     username: this.username,
+    //     password: this.password
+    //   }).then(res => {
+    //     if(res.code != '200') {
+    //       //未注册
+    //       ElMessage.error(res.msg)
+    //       return
+    //     } else {
+    //       //第一种修改数据的方法
+    //       //this.$store.commit('updateUserInfo', res.data);
+    //       // 第二种修改数据的方法
+    //       this.updateUserInfo(res.data);
+    //       localStorage.setItem('token', res.data.token);
+    //       this.$router.push('/')
+    //     }
+    //   })
+    // }
   }
 }
-
 </script>
 
 <template>
   <div class="login-container">
     <div class="form-wrap">
-      <h2 class="header">{{ count }}封神登录 {{ $store.state.count }}</h2>
-
+      <h2 class="header">封神登录</h2>
       <el-input v-model="username" placeholder="请输入账号" />
       <el-input class="psw" show-password type="password" v-model="password" @keyup.enter="submitForm" placeholder="请输入密码" />
-      <el-button type="success" @click="submitForm">登录</el-button>
+      <el-button type="success" @click="submitFormTea">登录</el-button>
     </div>
     
   </div>
