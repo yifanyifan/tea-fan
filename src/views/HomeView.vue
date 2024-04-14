@@ -4,24 +4,23 @@ import zfb from "../assets/zfb.png";
 import { Fold,Expand } from "@element-plus/icons-vue"
 //@ 代表是 src 路径
 import AsideCom from "@/components/AsideCom.vue";
-import BreadCrumbCom from "@/components/BreadCrumbCom.vue";
+// import BreadCrumbCom from "@/components/BreadCrumbCom.vue";
 // import { getUserAll } from '@/api/user'
-// import { mapMutations } from 'vuex'
+import { mapMutations } from 'vuex'
 
 export default {
   //数据属性
   data () {
     return {
-      // url: zfb
+      url: zfb
     }
   },
   // 生命周期函数
   mounted() {
     //用户未登录
-    // if(!this.$store.state.userInfo.loginStatus){
-      // this.$router.push('/login');
-    // }
-    //加载用户权限
+    if(!this.$store.state.userInfo.loginStatus) {
+      this.$router.push('/login');
+    }
     // getUserAll().then(res => {
     //   if(res.code != '200') {
     //     console.log(res);
@@ -40,22 +39,22 @@ export default {
 
   },
   //注册组件
-  // components: {
-  //   Fold,
-  //   Expand,
-  //   AsideCom,
-  //   BreadCrumbCom
-  // },
+  components: {
+    // Fold,
+    // Expand,
+    AsideCom,
+    // BreadCrumbCom
+  },
   methods: {
-    //...mapMutations(['updateUserAll']),
+    // ...mapMutations(['updateUserAll']),
     // setCount () {
     //   this.$store.dispatch('addnumActions', 5)
     // },
-    // logout() {
-    //   //清除本地存储
-    //   localStorage.clear();
-    //   this.$router.push("/login");
-    // }
+    logout() {
+      //清除本地存储
+      localStorage.clear();
+      this.$router.push("/login");
+    }
   }
 }
 </script>
@@ -64,28 +63,28 @@ export default {
   <div class="common-layout">
     <el-container>
       <!-- 左侧侧边栏 -->
-      <!-- <el-aside>
-        <div class="logo-box"> -->
-          <!-- <el-image style="width: 152px; height: 32px;" :src="url" /> -->
-          <!-- <h2 class="manage-title">一币封神</h2> -->
-        <!-- </div>
-      </el-aside> -->
+      <el-aside>
+        <div class="logo-box">
+          <el-image style="width: 152px; height: 32px;" :src="url" />
+        </div>
+
+        <!-- 菜单，使用自定义组件,collapse 用来判断是否收起侧边栏的值 -->
+        <AsideCom :collapse="false"/>
+      </el-aside>
 
       <!-- 右侧侧边栏 -->
       <el-container>
-        <!-- <el-header>
+        <el-header>
           <el-icon size="30" @click="collapse = !collapse">
             <component :is="headerLeft"></component>
           </el-icon>
           <span>欢迎 {{ $store.state.userInfo.adminname }} <button @click="logout">退出</button></span>
-        </el-header> -->
+        </el-header>
 
         <!-- 主体内容 -->
         <el-main>
           <BreadCrumbCom/>
-          <!-- {{ $store.state.userInfo }}
-          <br/>
-          Main
+          <!-- <br/>
           {{ $store.state.count }}
           <button @click="setCount">修改全局状态的方法</button> -->
           <router-view></router-view>

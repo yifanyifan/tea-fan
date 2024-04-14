@@ -78,9 +78,10 @@ export default {
         },
         // 启动定时器，在每5秒调用一次changeType方法
         startPolling() {
-            this.pollingInterval = setInterval(() => {
-                this.changeType();
-            }, 10000);
+            this.changeType();
+            // this.pollingInterval = setInterval(() => {
+            //     this.changeType();
+            // }, 100000);
         },
         // 停止定时器
         stopPolling() {

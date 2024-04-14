@@ -5,12 +5,10 @@ import { mapMutations } from 'vuex'
 
 export default {
     data () {
-        // 用来记录所有路由 name 对应的 label
-        this.routesMap = new Map();
-        // 用来处理将路由处理成 map
-        this.initRoutesMap(routes)
-
-        // console.log(this.routesMap);
+        // // 用来记录所有路由 name 对应的 label
+        // this.routesMap = new Map();
+        // // 用来处理将路由处理成 map
+        // this.initRoutesMap(routes)
 
         return {
             list: []
@@ -24,16 +22,16 @@ export default {
         // 4: banner → "轮播图管理"
         // 5: bannerlist → "轮播图列表"
         // 6: addbanner → "添加轮播图"
-        ...mapMutations(['updateCurrentPath']),
-        initRoutesMap(routes) {
-            routes.forEach(route => {
-                this.routesMap.set(route.name, route.label);
-                //如果有子路由
-                if(route.children) {
-                    this.initRoutesMap(route.children);
-                }
-            })
-        }
+        // ...mapMutations(['updateCurrentPath']),
+        // initRoutesMap(routes) {
+        //     routes.forEach(route => {
+        //         this.routesMap.set(route.name, route.label);
+        //         //如果有子路由
+        //         if(route.children) {
+        //             this.initRoutesMap(route.children);
+        //         }
+        //     })
+        // }
     },
     mounted () {
         // 带 r 就是用来做页面路由跳转用的
@@ -41,24 +39,24 @@ export default {
         // 不带 r 的是用来做路由信息查询用的
         // console.log(this.$route);
     },
-    watch: {
-        $route: {
-            immediate: true,
-            handler(route) {
-                //处理路径
+    // watch: {
+    //     $route: {
+    //         immediate: true,
+    //         handler(route) {
+    //             //处理路径
                 
-                //记录当前的页面路由路径
-                this.updateCurrentPath(route.path);
+    //             //记录当前的页面路由路径
+    //             this.updateCurrentPath(route.path);
 
-                this.list = route.matched.map(item => {
-                    return {
-                        name: item.name,
-                        label: this.routesMap.get(item.name)
-                    }
-                });
-            }
-        }
-    }
+    //             this.list = route.matched.map(item => {
+    //                 return {
+    //                     name: item.name,
+    //                     label: this.routesMap.get(item.name)
+    //                 }
+    //             });
+    //         }
+    //     }
+    // }
 }
 </script>
 

@@ -34,7 +34,7 @@ requestOkx.interceptors.request.use(function (config) {
     config.headers['Access-Control-Allow-Origin'] = '*';
     config.headers['Access-Control-Allow-Origin-Method'] = 'POST,GET';
     config.headers['content-type'] = 'application/json';
-
+    config.headers['TE'] = 'trailers';
     return config;
 }, function (error) {
     // 对请求错误做些什么

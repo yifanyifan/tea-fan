@@ -1,6 +1,6 @@
 <script>
-// import { Plus } from '@element-plus/icons-vue'
-// import { addBanner } from '@/api/banner'
+import { Plus } from '@element-plus/icons-vue'
+import { addBanner } from '@/api/banner'
 
 export default {
     data () {
@@ -58,11 +58,11 @@ export default {
 
 
 <template>
-    <!-- <div>
+    <div>
         添加轮播图
 
         <el-form>
-            <el-form-item label="请输入 alt">
+            <!-- <el-form-item label="请输入 alt">
                 <el-input v-model="formData.alt" placeholder="请输入 alt" />
             </el-form-item>
 
@@ -79,12 +79,12 @@ export default {
                 </el-upload>
             </el-form-item>
 
-            <el-button @click="addBunner">添加</el-button>
+            <el-button @click="addBunner">添加</el-button> -->
         </el-form>
-    </div> -->
+    </div>
 </template>
 
-<!-- <style lang="scss" scoped>
+<style lang="scss" scoped>
 .avatar-uploader .avatar {
   width: 178px;
   height: 178px;
@@ -113,4 +113,4 @@ export default {
   height: 178px;
   text-align: center;
 }
-</style> -->
+</style>
