@@ -1,6 +1,7 @@
 // 导入封装的axios
 import ajax from '@/utils/request';
 import ajaxOkx from '@/utils/requestOkx';
+import ajaxBinance from '@/utils/requestBinance';
 
 // 管理系统登录接口的封装
 export function loginFn(params) {
@@ -180,7 +181,15 @@ export function longShortAccountRatio(data) {
 }
 
 
-
+//=============================== Binance合约 ========================================================================
+//合约多空持仓人数比 
+export function longShortRatioByBinance(data) {
+    return ajaxBinance({
+        url: '/futures/data/globalLongShortAccountRatio',
+        method: 'GET',
+        data: data
+    });
+}
 
 
 

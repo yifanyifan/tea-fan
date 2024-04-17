@@ -1,5 +1,5 @@
 <script>
-import { longShortAccountRatio,supportCoin,loanRatio } from '@/api/user'
+import { longShortAccountRatio,supportCoin,loanRatio,longShortRatioByBinance } from '@/api/user'
 import * as echarts from 'echarts';
 
 export default {
@@ -39,41 +39,48 @@ export default {
         //合约多空持仓人数比
         async changeType(){
             for(var yy = 0; yy < 5; yy++){
-                //发起请求
-                const apiCall = { ccy: this.apiCalls[this.currentApiCallIndex], begin: new Date().getTime() - 30 * 24 * 60 * 60 * 1000, end: new Date().getTime(), period: "1H" };
-                const response = await longShortAccountRatio(apiCall);
+                // const apiCall = { ccy: this.apiCalls[this.currentApiCallIndex], begin: new Date().getTime() - 30 * 24 * 60 * 60 * 1000, end: new Date().getTime(), period: "1H" };
+                const apiCall = {
+                    symbol: "BTCUSDT", 
+                    period: "1h",
+                    limit: 30,
+                    startTime: new Date().getTime() - 30 * 24 * 60 * 60 * 1000, 
+                    endTime: new Date().getTime()
+                };
+                const response = await longShortRatioByBinance(apiCall);
+                console.log("22222222222222222222222222", response)
                 
                 
-                this.data2=[];
-                this.data2.push(...response.data.map(item => [new Date(parseInt(item[0])).toLocaleString(), item[1]]));
-                // 查找是否已存在该币种的 series
-                const ccy = apiCall.ccy;
-                const existingSeries = this.series.find(series => series.name === ccy);
-                //如果已存在，则更新数据；否则，添加新的 series
-                if (existingSeries) {
-                    existingSeries.data = this.data2;
-                } else {
-                    this.series.push({
-                        name: ccy,
-                        type: 'line',
-                        showSymbol: false,
-                        smooth: true,
-                        emphasis: {
-                            focus: 'series'
-                        },
-                        endLabel: {
-                            show: true,
-                            formatter: '{a}',
-                            distance: 5
-                        },
-                        data: this.data2
-                    });
-                    this.legendData.push(ccy);
-                }
-                this.initCharts('main', '合约多空持仓人数比', this.legendData, this.series);
+                // this.data2=[];
+                // this.data2.push(...response.data.map(item => [new Date(parseInt(item[0])).toLocaleString(), item[1]]));
+                // // 查找是否已存在该币种的 series
+                // const ccy = apiCall.ccy;
+                // const existingSeries = this.series.find(series => series.name === ccy);
+                // //如果已存在，则更新数据；否则，添加新的 series
+                // if (existingSeries) {
+                //     existingSeries.data = this.data2;
+                // } else {
+                //     this.series.push({
+                //         name: ccy,
+                //         type: 'line',
+                //         showSymbol: false,
+                //         smooth: true,
+                //         emphasis: {
+                //             focus: 'series'
+                //         },
+                //         endLabel: {
+                //             show: true,
+                //             formatter: '{a}',
+                //             distance: 5
+                //         },
+                //         data: this.data2
+                //     });
+                //     this.legendData.push(ccy);
+                // }
+                // this.initCharts('main', '合约多空持仓人数比', this.legendData, this.series);
 
-                // 增加索引，循环选择下一个 apiCall
-                this.currentApiCallIndex = (this.currentApiCallIndex + 1) % this.apiCalls.length;
+                // // 增加索引，循环选择下一个 apiCall
+                // this.currentApiCallIndex = (this.currentApiCallIndex + 1) % this.apiCalls.length;
             }
         },
         // 启动定时器，在每5秒调用一次changeType方法
