@@ -18,7 +18,6 @@ requestBinance.interceptors.request.use(function (config) {
   
     // Step 1: 构建请求参数
     const { baseURL, url, method, data } = config;
-    console.info("4444444444444444444444",JSON.stringify(config));
 
     const urlWithoutBase = url.replace(baseURL, ''); // 从 URL 中移除 baseURL
   
