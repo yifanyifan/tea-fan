@@ -17,3 +17,7 @@ export function addBanner(params) {
         data: params
     });
 }
+
+//k线图
+
+//交易图
