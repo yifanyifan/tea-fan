@@ -192,11 +192,14 @@ export function longShortRatioByBinance(data) {
 }
 
 
-
-
-
-
-
+//合约的未平仓合约量
+export function openInterestByBinance(data) {
+    return ajaxBinance({
+        url: '/futures/data/openInterest',
+        method: 'GET',
+        data: data
+    });
+}
 
 
 
