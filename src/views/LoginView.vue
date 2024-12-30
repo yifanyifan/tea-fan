@@ -56,7 +56,7 @@ export default {
 <template>
   <div class="login-container">
     <div class="form-wrap">
-      <h2 class="header">封神登录</h2>
+      <h2 class="header">登录页面</h2>
       <!-- v-model 双向绑定 -->
       <el-input v-model="username" placeholder="请输入账号" />
       <el-input class="psw" show-password type="password" v-model="password" placeholder="请输入密码" />
