@@ -1,116 +1,238 @@
-<script>
+<script setup>
+import { ref, reactive } from 'vue'
+import { ElMessage } from 'element-plus'
+import { useRouter } from 'vue-router'
 import { Plus } from '@element-plus/icons-vue'
-import { addBanner } from '@/api/banner'
 
-export default {
-    data () {
-        return {
-            // imageUrl: '',
-            // formData: {
-            //     alt: '',
-            //     link: '',
-            //     img: ''
-            // }
-        }
-    },
-    // components: {
-    //     Plus
-    // },
-    // methods: {
-    //     httpRequest (data) {
-    //         // console.log(data.file);
+// 路由实例
+const router = useRouter()
 
-    //         //根据文件生成一个图片的url地址，该地址是用于展示的临时的
-    //         // this.imageUrl = URL.createObjectURL(data.file);
-            
-    //         /*
-    //             1. 先获取用户选择的图片
-    //             2. 将用户选择的图片上传到存放图片的服务器，该服务器会给你返回一个图片地址
-    //             3. 将图片地址发送给自己的后端做存储
-    //         */
+// 表单引用
+const formRef = ref(null)
+// 加载状态
+const loading = ref(false)
 
-    //         //创建一个文件加载器
-    //         let reader = new FileReader();
-    //         //指定加载器开始加载文件
-    //         reader.readAsDataURL(data.file);
-    //         //加载完成后的回调函数
-    //         reader.onload = () => {
-    //             //console.log(reader.result);
-    //             this.imageUrl = reader.result;
-    //             this.formData.img = reader.result;
-    //         }
+// 表单数据
+const bannerForm = reactive({
+  title: '',
+  imageUrl: '',
+  link: '',
+  sort: 0,
+  status: 1
+})
 
-    //     },
-    //     addBunner () {
-    //         // console.log(this.formData);
-    //         addBanner(this.formData).then(res => {
-    //             // console.log(res);
-    //             if(res.code == 200){
-    //                 //提交成功后进入轮播图列表查看
-    //                 this.$router.push("/banner/bannerlist")
-    //             }
-    //         })
-    //     }
-    // }
+// 表单验证规则
+const rules = {
+  title: [
+    { required: true, message: '请输入标题', trigger: 'blur' },
+    { min: 2, max: 50, message: '长度在 2 到 50 个字符', trigger: 'blur' }
+  ],
+  imageUrl: [
+    { required: true, message: '请上传图片', trigger: 'change' }
+  ],
+  sort: [
+    { required: true, message: '请输入排序号', trigger: 'blur' },
+    { type: 'number', message: '排序号必须为数字' }
+  ]
 }
 
+/**
+ * 图片上传成功回调
+ * @param {Object} response - 上传响应结果
+ */
+const handleUploadSuccess = (response) => {
+  if (response.code === 200) {
+    bannerForm.imageUrl = response.data
+    ElMessage.success('图片上传成功')
+  } else {
+    ElMessage.error(response.message || '上传失败')
+  }
+}
+
+/**
+ * 图片上传前的校验
+ * @param {File} file - 上传的文件对象
+ * @returns {boolean} 是否通过校验
+ */
+const beforeUpload = (file) => {
+  // 文件类型校验
+  const isImage = /^image\/(jpeg|png|gif|jpg)$/.test(file.type)
+  if (!isImage) {
+    ElMessage.error('只能上传图片文件!')
+    return false
+  }
+  
+  // 文件大小校验（2MB）
+  const isLt2M = file.size / 1024 / 1024 < 2
+  if (!isLt2M) {
+    ElMessage.error('图片大小不能超过 2MB!')
+    return false
+  }
+  
+  return true
+}
+
+/**
+ * 提交表单
+ */
+const submitForm = async () => {
+  if (!formRef.value) return
+  
+  try {
+    await formRef.value.validate()
+    loading.value = true
+    
+    // 调用添加Banner接口
+    // const res = await addBanner(bannerForm)
+    
+    ElMessage.success('添加成功')
+    router.push('/banner/list')
+  } catch (error) {
+    console.error('提交表单错误:', error)
+    ElMessage.error(error.message || '提交失败')
+  } finally {
+    loading.value = false
+  }
+}
+
+/**
+ * 重置表单
+ */
+const resetForm = () => {
+  formRef.value?.resetFields()
+  bannerForm.imageUrl = ''
+}
 </script>
 
-
 <template>
-    <div>
-        添加轮播图
+  <div class="banner-add">
+    <el-card class="form-card">
+      <template #header>
+        <div class="card-header">
+          <span>添加轮播图</span>
+          <el-button @click="router.push('/banner/list')">返回列表</el-button>
+        </div>
+      </template>
 
-        <el-form>
-            <!-- <el-form-item label="请输入 alt">
-                <el-input v-model="formData.alt" placeholder="请输入 alt" />
-            </el-form-item>
+      <el-form
+        ref="formRef"
+        :model="bannerForm"
+        :rules="rules"
+        label-width="100px"
+        label-position="right"
+      >
+        <el-form-item label="标题" prop="title">
+          <el-input 
+            v-model="bannerForm.title"
+            placeholder="请输入标题"
+            maxlength="50"
+            show-word-limit
+          />
+        </el-form-item>
 
-            <el-form-item label="请输入 link">
-                <el-input v-model="formData.link" placeholder="请输入 link" />
-            </el-form-item>
+        <el-form-item label="图片" prop="imageUrl">
+          <el-upload
+            class="banner-uploader"
+            :action="`${import.meta.env.VITE_API_URL}/upload`"
+            :show-file-list="false"
+            :on-success="handleUploadSuccess"
+            :before-upload="beforeUpload"
+            accept="image/*"
+          >
+            <img
+              v-if="bannerForm.imageUrl"
+              :src="bannerForm.imageUrl"
+              class="banner-image"
+            >
+            <el-icon v-else class="banner-uploader-icon"><Plus /></el-icon>
+          </el-upload>
+          <div class="upload-tip">建议尺寸：750x350像素，最大2MB</div>
+        </el-form-item>
 
-            <el-form-item>
-                <el-upload :http-request="httpRequest" class="avatar-uploader" :show-file-list="false">
-                    <img v-if="imageUrl" :src="imageUrl" class="avatar" />
-                    <el-icon v-else class="avatar-uploader-icon">
-                        <Plus />
-                    </el-icon>
-                </el-upload>
-            </el-form-item>
+        <el-form-item label="链接" prop="link">
+          <el-input 
+            v-model="bannerForm.link"
+            placeholder="请输入链接地址"
+          />
+        </el-form-item>
 
-            <el-button @click="addBunner">添加</el-button> -->
-        </el-form>
-    </div>
+        <el-form-item label="排序" prop="sort">
+          <el-input-number 
+            v-model="bannerForm.sort"
+            :min="0"
+            :max="999"
+          />
+        </el-form-item>
+
+        <el-form-item label="状态" prop="status">
+          <el-switch
+            v-model="bannerForm.status"
+            :active-value="1"
+            :inactive-value="0"
+          />
+        </el-form-item>
+
+        <el-form-item>
+          <el-button type="primary" :loading="loading" @click="submitForm">
+            提交
+          </el-button>
+          <el-button @click="resetForm">重置</el-button>
+        </el-form-item>
+      </el-form>
+    </el-card>
+  </div>
 </template>
 
 <style lang="scss" scoped>
-.avatar-uploader .avatar {
-  width: 178px;
-  height: 178px;
-  display: block;
-}
-</style>
+.banner-add {
+  padding: 20px;
 
-<style>
-.avatar-uploader .el-upload {
-  border: 1px dashed var(--el-border-color);
-  border-radius: 6px;
-  cursor: pointer;
-  position: relative;
-  overflow: hidden;
-  transition: var(--el-transition-duration-fast);
-}
+  .form-card {
+    max-width: 800px;
+    margin: 0 auto;
 
-.avatar-uploader .el-upload:hover {
-  border-color: var(--el-color-primary);
-}
+    .card-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+  }
 
-.el-icon.avatar-uploader-icon {
-  font-size: 28px;
-  color: #8c939d;
-  width: 178px;
-  height: 178px;
-  text-align: center;
+  .banner-uploader {
+    :deep(.el-upload) {
+      border: 1px dashed var(--el-border-color);
+      border-radius: 6px;
+      cursor: pointer;
+      position: relative;
+      overflow: hidden;
+      transition: var(--el-transition-duration-fast);
+
+      &:hover {
+        border-color: var(--el-color-primary);
+      }
+    }
+  }
+
+  .banner-uploader-icon {
+    font-size: 28px;
+    color: #8c939d;
+    width: 178px;
+    height: 178px;
+    text-align: center;
+    line-height: 178px;
+  }
+
+  .banner-image {
+    width: 178px;
+    height: 178px;
+    display: block;
+    object-fit: cover;
+  }
+
+  .upload-tip {
+    color: var(--el-text-color-secondary);
+    font-size: 12px;
+    margin-top: 8px;
+  }
 }
 </style>

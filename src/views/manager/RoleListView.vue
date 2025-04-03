@@ -1,223 +1,241 @@
-<script>
+<script setup>
+import { ref, onMounted } from 'vue'
+import { ElMessage, ElMessageBox } from 'element-plus'
 import { roleList, addRole, listTree, updateAdmin, deleteRole, getPermissionByRoleId } from '@/api/user'
-
 import { routes } from '@/router/index.js'
-import { ElMessage } from 'element-plus'
 import { now } from 'lodash'
 
-export default {
-    data() {
-        return {
-            //是否打开抽屉效果
-            drawer: false,
-            //管理员数据
-            formData: {
+// 表格数据
+const tableData = ref([])
+// 加载状态
+const loading = ref(false)
+
+// 对话框控制
+const dialogVisible = ref(false)
+const dialogTitle = ref('添加角色')
+const formRef = ref(null)
+
+// 表单数据
+const formData = ref({
                 id: '',
                 name: '',
-                permissionList: []
-            },
-            //默认选中项
-            defaultCheckedKeys: [],
-            interfaceType: '10086', // 10086添加管理员 10010编辑管理员,
-
-            //数据
-            tableData: {},
-            //分页
-            page: {size:10, current:1},
-            //查询参数
-            data: {},
-            //菜单集合
+  code: '',
+  description: '',
             permissions: []
-        }
-    },
-    methods: {
-        //获取树形结构中选中的值
-        formatCheckedKeys() {
-            //最终结果
-            const result = [];
-            //选中的值
-            const list = this.$refs.treeRef.getCheckedNodes(true);
-            console.log(list);
-            list.forEach(item => {
-                // 获取父级路由
-                // const parent = this.permissions.find(permission => {
-                //     return permission.children.some(child => child.id == item.id)
-                // })
-                // if(!result.some(i => i.id == parent.id)){
-                //     result.push({
-                //         id: parent.id,
-                //         authority: "CREATE,UPDATE,READ,DELETE"
-                //     })
-                // }
-                result.push({
-                    id: item.id,
-                    authority: "CREATE,UPDATE,READ,DELETE"
-                })
-            });
-            // 将路由权限添加到 formData中
-            this.formData.permissionList = result;
-        },
-        addClick() {
-            this.drawer = true;
-            this.interfaceType = '10086'
-            //获取菜单数据
-            listTree().then(res => {
-                this.permissions = res.data;
-            })
-        },
-        add() {
-            this.interfaceType = '10086'
+})
 
-            //获取所有的权限路由
-            this.formatCheckedKeys();
+// 权限树数据
+const permissionTree = ref([])
 
-            //将数据添加到服务器中
-            addRole(this.formData).then(res => {
-                if(res.code == '200'){
-                    ElMessage.success(res.message);
-                    //关闭抽屉效果
-                    this.drawer = false;
-                    //重新获取最新数据
-                    this.roleList();
-                }else{
-                    ElMessage.error(res.message);
-                }
-                
-            });
-        },
-        editClick(row) {
-            this.interfaceType = '10010'
-            //打开抽屉
-            this.drawer = true;
+// 表单验证规则
+const rules = {
+  name: [
+    { required: true, message: '请输入角色名称', trigger: 'blur' },
+    { min: 2, max: 20, message: '长度在 2 到 20 个字符', trigger: 'blur' }
+  ],
+  code: [
+    { required: true, message: '请输入角色编码', trigger: 'blur' },
+    { pattern: /^[A-Z_]+$/, message: '只能包含大写字母和下划线', trigger: 'blur' }
+  ]
+}
 
-            this.formData.id = row.id;
-            this.formData.name = row.name;
+/**
+ * 获取角色列表
+ */
+const fetchRoleList = async () => {
+  try {
+    loading.value = true
+    const res = await roleList()
+    tableData.value = res.data
+  } catch (error) {
+    console.error('获取角色列表失败:', error)
+    ElMessage.error('获取角色列表失败')
+  } finally {
+    loading.value = false
+  }
+}
 
-            //获取所有菜单数据
-            listTree().then(res => {
-                this.permissions = res.data;
-            })
+/**
+ * 获取权限树数据
+ */
+const fetchPermissionTree = async () => {
+  try {
+    const res = await listTree()
+    permissionTree.value = res.data
+  } catch (error) {
+    console.error('获取权限树失败:', error)
+    ElMessage.error('获取权限树失败')
+  }
+}
 
-            //获取当前已选择菜单
-            const checkedKeys = [];
-            getPermissionByRoleId(row.id).then(res => {
-                res.data.forEach(item => {
-                    checkedKeys.push(item.id);
-                });
-                this.defaultCheckedKeys = checkedKeys;
-            })
-        },
-        update() {
-            //获取当前用户选中的权限
-            this.formatCheckedKeys();
-
-            //提交修改信息
-            addRole(this.formData).then(res => {
-                if(res.code == '200'){
-                    ElMessage.success(res.message);
-                    //关闭抽屉效果
-                    this.drawer = false;
-                    //重新获取最新数据
-                    this.roleList();
-                }else{
-                    ElMessage.error(res.message);
-                }
-            });
-
-        },
-        deleteClick(row) {
-            deleteRole(row.id).then(res => {
-                if(res.code == '200'){
-                    //成功
-                    ElMessage.success(res.message);
-                    //重新获取最新数据
-                    this.roleList();
-                }else{
-                    ElMessage.error(res.message);
-                }
-            })
-        },
-        close() {
-            //清空所有状态
-            this.permissions=[];
-            this.formData = {
+/**
+ * 处理添加/编辑角色
+ * @param {Object} row - 行数据（编辑时传入）
+ */
+const handleEdit = async (row = null) => {
+  dialogTitle.value = row ? '编辑角色' : '添加角色'
+  await fetchPermissionTree()
+  
+  if (row) {
+    formData.value = { ...row }
+  } else {
+    formData.value = {
                 id: '',
                 name: '',
-                permissionList: []
-            };
-            this.defaultCheckedKeys = [];
-            
-        },
-        handleSizeChange() {
-            this.page.current = 1;
-            this.roleList();
-        },
-        handleCurrentChange() {
-            this.roleList();
-        },
-        roleList() {
-            roleList(this.page, this.data).then(res => {
-                this.tableData = res.data;
-            })
-        }
-
-    },
-    //生命同期函数
-    mounted() {
-        //获取管理员列表
-        this.roleList();
-    },
-    //计算属性
-    computed: {
+      code: '',
+      description: '',
+      permissions: []
     }
+  }
+  dialogVisible.value = true
 }
+
+/**
+ * 提交表单
+ */
+const submitForm = async () => {
+  if (!formRef.value) return
+  
+  try {
+    await formRef.value.validate()
+    const api = formData.value.id ? updateAdmin : addRole
+    await api(formData.value)
+    ElMessage.success(`${dialogTitle.value}成功`)
+    dialogVisible.value = false
+    fetchRoleList()
+  } catch (error) {
+    console.error('提交失败:', error)
+    ElMessage.error('提交失败')
+  }
+}
+
+/**
+ * 处理删除角色
+ * @param {number} id - 角色ID
+ */
+const handleDelete = async (id) => {
+  try {
+    await ElMessageBox.confirm('确认删除该角色吗？', '提示', {
+      type: 'warning'
+    })
+    await deleteRole(id)
+    ElMessage.success('删除成功')
+    fetchRoleList()
+  } catch (error) {
+    if (error !== 'cancel') {
+      console.error('删除失败:', error)
+      ElMessage.error('删除失败')
+    }
+  }
+}
+
+// 页面加载时获取数据
+onMounted(fetchRoleList)
 </script>
 
 <template>
-    <div>
-        <div class="header">
-            权限列表
-            <el-button type="success" @click="addClick">添加权限</el-button>
+  <div class="role-list">
+    <el-card>
+      <template #header>
+        <div class="card-header">
+          <span>角色列表</span>
+          <el-button type="primary" @click="handleEdit()">
+            添加角色
+          </el-button>
         </div>
+      </template>
 
-        <!-- 主页面 -->
-        <el-table :data="tableData.records" style="width: 100%">
-            <el-table-column prop="name" label="权限名称"/>
-            <el-table-column prop="role" label="操作" >
-                <template #default="scope">
-                    <el-button @click="editClick(scope.row)" size="small" type="primary">编辑</el-button>
-                    <el-button @click="deleteClick(scope.row)" size="small" type="success">删除</el-button>
+      <el-table
+        v-loading="loading"
+        :data="tableData"
+        border
+        style="width: 100%"
+      >
+        <el-table-column prop="name" label="角色名称" />
+        <el-table-column prop="code" label="角色编码" />
+        <el-table-column prop="description" label="描述" show-overflow-tooltip />
+        <el-table-column prop="createTime" label="创建时间" width="180" />
+        <el-table-column label="操作" width="200" fixed="right">
+          <template #default="{ row }">
+            <el-button type="primary" link @click="handleEdit(row)">
+              编辑
+            </el-button>
+            <el-button
+              type="danger"
+              link
+              @click="handleDelete(row.id)"
+              :disabled="row.code === 'ADMIN'"
+            >
+              删除
+            </el-button>
                 </template>
             </el-table-column>
         </el-table>
+    </el-card>
 
-        <!-- 用来做分页显示-->
-        <el-pagination v-model:current-page="page.current" v-model:page-size="page.size" :page-sizes="[1, 10, 20, 30]" :background="background" layout="sizes, prev, pager, next" :total="tableData.total" @size-change="handleSizeChange" @current-change="handleCurrentChange" />
-   
-        <!-- 抽屉效果 -->
-        <el-drawer @close="close" v-model="drawer">
-            <template #header>
-                <h4>{{ interfaceType == '10086' ? '添加权限' : '编辑权限' }}</h4>
-            </template>
-
-            <el-form label-width="120px">
-                <el-form-item label="名称">
-                    <el-input placeholder ="请输入权限名称" v-model="formData.name"/>
+    <!-- 表单对话框 -->
+    <el-dialog
+      v-model="dialogVisible"
+      :title="dialogTitle"
+      width="600px"
+      destroy-on-close
+    >
+      <el-form
+        ref="formRef"
+        :model="formData"
+        :rules="rules"
+        label-width="100px"
+      >
+        <el-form-item label="角色名称" prop="name">
+          <el-input
+            v-model="formData.name"
+            placeholder="请输入角色名称"
+          />
+        </el-form-item>
+        <el-form-item label="角色编码" prop="code">
+          <el-input
+            v-model="formData.code"
+            placeholder="请输入角色编码"
+            :disabled="!!formData.id"
+          />
+        </el-form-item>
+        <el-form-item label="描述" prop="description">
+          <el-input
+            v-model="formData.description"
+            type="textarea"
+            placeholder="请输入描述"
+          />
                 </el-form-item>
-                
-                <el-form-item>
-                    <el-tree show-checkbox :default-checked-keys="defaultCheckedKeys" :default-expand-all="true" ref="treeRef" :data="permissions" :props="{ id: 'id', label: 'name' }" node-key="id"/>
+        <el-form-item label="权限" prop="permissions">
+          <el-tree
+            ref="permissionTreeRef"
+            :data="permissionTree"
+            show-checkbox
+            node-key="id"
+            :props="{
+              label: 'name',
+              children: 'children'
+            }"
+            v-model:checked-keys="formData.permissions"
+          />
                 </el-form-item>
             </el-form>
-
-            <el-button v-if="interfaceType=='10086'" @click="add" type="primary">添加</el-button>
-            <el-button v-else @click="update">修改</el-button>
-        </el-drawer>
+      <template #footer>
+        <el-button @click="dialogVisible = false">取消</el-button>
+        <el-button type="primary" @click="submitForm">确定</el-button>
+      </template>
+    </el-dialog>
     </div>
 </template>
 
 <style lang="scss" scoped>
-.header{
-    margin-bottom: 16px;
+.role-list {
+  padding: 20px;
+
+  .card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
 }
 </style>

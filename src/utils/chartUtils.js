@@ -1,0 +1,3 @@
+export const initChart = (dom, option) => {
+  // 图表初始化逻辑...
+} 

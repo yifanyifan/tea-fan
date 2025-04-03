@@ -1,61 +1,137 @@
+<script setup>
+import { ref } from 'vue'
+import { ElMessage } from 'element-plus'
+import * as XLSX from 'xlsx'
+import { Upload } from '@element-plus/icons-vue'
 
-<script>
-import * as XLSX from 'xlsx';
+// 表格数据
+const tableData = ref([])
+// 表格列
+const columns = ref([])
+// 上传加载状态
+const loading = ref(false)
 
-export default {
-    data () {
-        return {
-            tableData: []
-        }
-    },
-    methods: {
-        importClick(){
-            //选择文件事件的点击事件
-            this.$refs.inp.click();
-        },
-        importChange (event) {
-            //选中文件后的回调函数
-            // console.log(event.target.files[0]);
-            // 1. 获取到我们选中的文件
-            const file = event.target.files[0];
-            // 创建文件的加载器
-            const reader = new FileReader;
-            // 将文件加载为数据流
-            reader.readAsBinaryString(file);
-            reader.onload = () => {
-                // console.log(reader.result)
-                // 将我们的数据流转为 js 对象
-                const boxx = XLSX.read(reader.result, { type: 'binary' });
-                // 将 工作表1 中的数据提出来
-                let res = boxx.Sheets['Sheet1'];
-                // 将 工作表1 中的内容转换成 json
-                res = XLSX.utils.sheet_to_json(res);
+/**
+ * 处理文件上传
+ * @param {File} file - 上传的文件对象
+ */
+const handleUpload = (file) => {
+  // 验证文件类型
+  const isExcel = /\.(xlsx|xls|csv)$/.test(file.name.toLowerCase())
+  if (!isExcel) {
+    ElMessage.error('只能上传Excel文件!')
+    return false
+  }
 
-                // console.log(res);
+  loading.value = true
+  
+  // 读取文件
+  const reader = new FileReader()
+  reader.onload = (e) => {
+    try {
+      const data = new Uint8Array(e.target.result)
+      const workbook = XLSX.read(data, { type: 'array' })
+      
+      // 获取第一个工作表
+      const firstSheet = workbook.Sheets[workbook.SheetNames[0]]
+      
+      // 转换为JSON数据
+      const jsonData = XLSX.utils.sheet_to_json(firstSheet)
+      
+      // 设置表格数据
+      tableData.value = jsonData
+      
+      // 设置表格列
+      if (jsonData.length > 0) {
+        columns.value = Object.keys(jsonData[0]).map(key => ({
+          prop: key,
+          label: key
+        }))
+      }
 
-                this.tableData = res;
-            }
-        }
+      ElMessage.success('导入成功')
+    } catch (error) {
+      console.error('导入失败:', error)
+      ElMessage.error('导入失败')
+    } finally {
+      loading.value = false
     }
+  }
+
+  reader.readAsArrayBuffer(file)
+  return false // 阻止自动上传
 }
 </script>
 
 <template>
-    <div>
-        <el-button type="success" @click="importClick">选择文件</el-button>
-        <input ref="inp" hidden type="file" @change="importChange"/>
+  <div class="excel-import">
+    <el-card>
+      <template #header>
+        <div class="card-header">
+          <span>Excel导入示例</span>
+        </div>
+      </template>
 
-        <el-table :data="tableData" style="width: 100%">
-            <el-table-column type="index" label="序号" />
-            <el-table-column label="图片">
-                <template #default="scope">
-                    <div style="display: flex; align-items: center">
-                        <el-image :src="scope.row.img1"/>
-                    </div>
-                </template>
-            </el-table-column>
-            <el-table-column prop="category" label="分类"/>
-            <el-table-column prop="proname" label="名称"/>
-        </el-table>
-    </div>
+      <!-- 上传区域 -->
+      <div class="upload-area">
+        <el-upload
+          class="excel-uploader"
+          accept=".xlsx,.xls,.csv"
+          :auto-upload="false"
+          :show-file-list="false"
+          :before-upload="handleUpload"
+        >
+          <template #trigger>
+            <el-button :loading="loading" type="primary">
+              <el-icon><Upload /></el-icon>
+              选择文件
+            </el-button>
+          </template>
+          <template #tip>
+            <div class="upload-tip">
+              只能上传 xlsx/xls/csv 文件
+            </div>
+          </template>
+        </el-upload>
+      </div>
+
+      <!-- 数据预览表格 -->
+      <el-table
+        v-if="tableData.length > 0"
+        :data="tableData"
+        border
+        style="width: 100%; margin-top: 20px"
+      >
+        <el-table-column
+          v-for="col in columns"
+          :key="col.prop"
+          :prop="col.prop"
+          :label="col.label"
+        />
+      </el-table>
+    </el-card>
+  </div>
 </template>
+
+<style lang="scss" scoped>
+.excel-import {
+  padding: 20px;
+
+  .card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+
+  .upload-area {
+    text-align: center;
+    padding: 20px 0;
+
+    .upload-tip {
+      color: var(--el-text-color-secondary);
+      font-size: 12px;
+      margin-top: 10px;
+    }
+  }
+}
+</style>

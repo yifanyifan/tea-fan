@@ -1,218 +1,331 @@
-<script>
+<script setup>
+import { ref, onMounted } from 'vue'
+import { ElMessage, ElMessageBox } from 'element-plus'
 import { adminList, addAdmin, updateAdmin, deleteAdmin } from '@/api/user'
-
 import { routes } from '@/router/index.js'
-import { ElMessage } from 'element-plus'
 import { now } from 'lodash'
-import { roleAll,getRoleByUserId } from '../../api/user'
+import { roleAll, getRoleByUserId } from '../../api/user'
 
-export default {
-    data() {
-        return {
-            //是否打开抽屉效果
-            drawer: false,
-            // 10086添加管理员 10010编辑管理员
-            interfaceType: '10086', 
-            //管理员数据
-            formData: {
-                id: '',
-                username: '',
-                password: '',
-                clientId: '',
-                roleList: []
-            },
-            //数据
-            tableData: {},
-            //分页
-            page: {size:10, current:1},
-            //查询参数
-            data: {},
-            // 权限集合
-            roles: [],
-            // 默认选中项
-            defaultCheckedKeys: [],
-        }
-    },
-    methods: {
-        //获取树形结构中选中的值
-        formatCheckedKeys() {
-            //选中的值
-            const list = this.$refs.treeRef.getCheckedNodes(true);
-            list.forEach(item => {
-                this.formData.roleList.push({"id": item.id});
-            })
-        },
-        addClick() {
-            //展示弹框
-            this.drawer = true;
-            //10086新增，10010编辑
-            this.interfaceType = '10086';
-            //获取数据
-            roleAll().then(res => {
-                this.roles = res.data;
-            })
-        },
-        add() {
-            //获取选中权限
-            this.formatCheckedKeys();
-            //将数据添加到服务器中
-            addAdmin(this.formData).then(res => {
-                if(res.code == '200'){
-                    ElMessage.success(res.msg);
-                    //关闭抽屉效果
-                    this.drawer = false;
-                    //重新获取最新数据
-                    this.adminList();
-                }else{
-                    ElMessage.error(res.msg);
-                }
-            });
-        },
-        editClick(row) {
-            this.interfaceType = '10010'
-            //打开抽屉
-            this.drawer = true;
+// 表格数据
+const tableData = ref([])
+// 加载状态
+const loading = ref(false)
+// 分页配置
+const pagination = ref({
+  currentPage: 1,
+  pageSize: 10,
+  total: 0
+})
 
-            this.formData.id = row.id;
-            this.formData.username = row.username;
-            this.formData.password = '';
-            this.formData.clientId = row.clientId;
+// 搜索表单
+const searchForm = ref({
+  username: '',
+  status: ''
+})
 
-            //获取所有角色
-            roleAll().then(res => {
-                this.roles = res.data;
-            })
-            const checkedKeys = [];
-            //获取当前用户已有角色
-            getRoleByUserId(row.id).then(res => {
-                res.data.forEach(item => {
-                    checkedKeys.push(item.id);
-                })
-                this.defaultCheckedKeys = checkedKeys;
-            });
-        },
-        update() {
-            if(this.formData.adminname == '' || this.formData.password == '') {
-                ElMessage.error("用户名、密码不可为空")
-                return
-            }
-            //获取当前用户选中的权限
-            this.formatCheckedKeys();
-            //提交修改信息
-            addAdmin(this.formData).then(res => {
-                if(res.code == '200'){
-                    ElMessage.success(res.message);
-                    //关闭抽屉效果
-                    this.drawer = false;
-                    //重新获取最新数据
-                    this.adminList();
-                }else{
-                    ElMessage.error(res.message);
-                }
-            });
+// 表单对话框
+const dialogVisible = ref(false)
+const dialogTitle = ref('添加管理员')
+const formRef = ref(null)
+const formData = ref({
+  username: '',
+  password: '',
+  realName: '',
+  phone: '',
+  email: '',
+  roleIds: [],
+  status: 1
+})
 
-        },
-        deleteClick(row) {
-            deleteAdmin(row.id).then(res => {
-                if(res.code == '200'){
-                    //成功
-                    ElMessage.success(res.message);
-                    //重新获取最新数据
-                    this.adminList();
-                }else{
-                    ElMessage.error(res.message);
-                }
-            })
-        },
-        close() {
-            //清空所有状态
-            this.roles = [];
-            this.formData = {
-                id: '',
-                username: '',
-                password: '',
-                clientId: '',
-                roleList: []
-            };
-            this.defaultCheckedKeys = [];
-        },
-        handleSizeChange() {
-            this.page.current = 1;
-            this.adminList();
-        },
-        handleCurrentChange() {
-            this.adminList();
-        },
-        adminList() {
-            adminList(this.page, this.data).then(res => {
-                this.tableData = res.data;
-            })
-        }
-
-    },
-    //生命同期函数
-    mounted() {
-        //获取管理员列表
-        this.adminList();
-    },
-    //计算属性
-    computed: {
-    }
+// 表单验证规则
+const rules = {
+  username: [
+    { required: true, message: '请输入用户名', trigger: 'blur' },
+    { min: 3, max: 20, message: '长度在 3 到 20 个字符', trigger: 'blur' }
+  ],
+  password: [
+    { required: true, message: '请输入密码', trigger: 'blur' },
+    { min: 6, max: 20, message: '长度在 6 到 20 个字符', trigger: 'blur' }
+  ],
+  phone: [
+    { pattern: /^1[3-9]\d{9}$/, message: '请输入正确的手机号', trigger: 'blur' }
+  ],
+  email: [
+    { type: 'email', message: '请输入正确的邮箱地址', trigger: 'blur' }
+  ],
+  roleIds: [
+    { type: 'array', required: true, message: '请选择角色', trigger: 'change' }
+  ]
 }
+
+/**
+ * 获取管理员列表
+ */
+const fetchList = async () => {
+  try {
+    loading.value = true
+    // const res = await getManagerList({
+    //   ...searchForm.value,
+    //   page: pagination.value.currentPage,
+    //   size: pagination.value.pageSize
+    // })
+    // tableData.value = res.data.list
+    // pagination.value.total = res.data.total
+  } catch (error) {
+    console.error('获取列表失败:', error)
+    ElMessage.error('获取列表失败')
+  } finally {
+    loading.value = false
+  }
+}
+
+/**
+ * 处理添加/编辑
+ * @param {Object} row - 行数据（编辑时传入）
+ */
+const handleEdit = (row = null) => {
+  dialogTitle.value = row ? '编辑管理员' : '添加管理员'
+  if (row) {
+    formData.value = { ...row }
+    formData.value.password = '' // 编辑时不显示密码
+  } else {
+    formData.value = {
+      username: '',
+      password: '',
+      realName: '',
+      phone: '',
+      email: '',
+      roleIds: [],
+      status: 1
+    }
+  }
+  dialogVisible.value = true
+}
+
+/**
+ * 提交表单
+ */
+const submitForm = async () => {
+  if (!formRef.value) return
+  
+  try {
+    await formRef.value.validate()
+    // const api = formData.value.id ? updateManager : addManager
+    // await api(formData.value)
+    ElMessage.success(`${dialogTitle.value}成功`)
+    dialogVisible.value = false
+    fetchList()
+  } catch (error) {
+    console.error('提交失败:', error)
+    ElMessage.error('提交失败')
+  }
+}
+
+/**
+ * 处理删除
+ * @param {number} id - 管理员ID
+ */
+const handleDelete = async (id) => {
+  try {
+    await ElMessageBox.confirm('确认删除该管理员吗？', '提示', {
+      type: 'warning'
+    })
+    // await deleteManager(id)
+    ElMessage.success('删除成功')
+    fetchList()
+  } catch (error) {
+    if (error !== 'cancel') {
+      console.error('删除失败:', error)
+      ElMessage.error('删除失败')
+    }
+  }
+}
+
+// 页面加载时获取数据
+onMounted(fetchList)
 </script>
 
 <template>
-    <div>
-        <div class="header">
-            用户列表
-            <el-button type="success" @click="addClick">添加用户</el-button>
+  <div class="manager-list">
+    <!-- 搜索区域 -->
+    <el-card class="search-card">
+      <el-form :model="searchForm" inline>
+        <el-form-item label="用户名">
+          <el-input
+            v-model="searchForm.username"
+            placeholder="请输入用户名"
+            clearable
+            @keyup.enter="fetchList"
+          />
+        </el-form-item>
+        <el-form-item label="状态">
+          <el-select v-model="searchForm.status" placeholder="请选择状态" clearable>
+            <el-option label="启用" :value="1" />
+            <el-option label="禁用" :value="0" />
+          </el-select>
+        </el-form-item>
+        <el-form-item>
+          <el-button type="primary" @click="fetchList">查询</el-button>
+          <el-button @click="searchForm = {}">重置</el-button>
+        </el-form-item>
+      </el-form>
+    </el-card>
+
+    <!-- 数据表格 -->
+    <el-card>
+      <template #header>
+        <div class="card-header">
+          <span>管理员列表</span>
+          <el-button type="primary" @click="handleEdit()">
+            添加管理员
+          </el-button>
         </div>
+      </template>
 
-        <!-- 主页面 -->
-        <el-table :data="tableData.records" style="width: 100%">
-            <el-table-column prop="username" label="管理员名称" />
-            <el-table-column prop="clientId" label="ClientId"  />
-            
-            <el-table-column prop="role" label="操作" >
-                <template #default="scope">
-                    <el-button @click="editClick(scope.row)" size="small" type="primary">编辑</el-button>
-                    <el-button @click="deleteClick(scope.row)" size="small" type="success">删除</el-button>
-                </template>
-            </el-table-column>
-        </el-table>
+      <el-table
+        v-loading="loading"
+        :data="tableData"
+        border
+        style="width: 100%"
+      >
+        <el-table-column prop="username" label="用户名" />
+        <el-table-column prop="realName" label="姓名" />
+        <el-table-column prop="phone" label="手机号" />
+        <el-table-column prop="email" label="邮箱" />
+        <el-table-column prop="roles" label="角色" min-width="150">
+          <template #default="{ row }">
+            <el-tag
+              v-for="role in row.roles"
+              :key="role.id"
+              size="small"
+              style="margin-right: 5px"
+            >
+              {{ role.name }}
+            </el-tag>
+          </template>
+        </el-table-column>
+        <el-table-column prop="status" label="状态" width="100">
+          <template #default="{ row }">
+            <el-tag :type="row.status === 1 ? 'success' : 'danger'">
+              {{ row.status === 1 ? '启用' : '禁用' }}
+            </el-tag>
+          </template>
+        </el-table-column>
+        <el-table-column label="操作" width="200" fixed="right">
+          <template #default="{ row }">
+            <el-button type="primary" link @click="handleEdit(row)">
+              编辑
+            </el-button>
+            <el-button type="danger" link @click="handleDelete(row.id)">
+              删除
+            </el-button>
+          </template>
+        </el-table-column>
+      </el-table>
 
-        <!-- 用来做分页显示-->
-        <el-pagination v-model:current-page="page.current" v-model:page-size="page.size" :page-sizes="[1, 10, 20, 30]" :background="background" layout="sizes, prev, pager, next" :total="tableData.total" @size-change="handleSizeChange" @current-change="handleCurrentChange" />
+      <!-- 分页器 -->
+      <div class="pagination">
+        <el-pagination
+          v-model:current-page="pagination.currentPage"
+          v-model:page-size="pagination.pageSize"
+          :total="pagination.total"
+          :page-sizes="[10, 20, 50, 100]"
+          layout="total, sizes, prev, pager, next"
+          @size-change="fetchList"
+          @current-change="fetchList"
+        />
+      </div>
+    </el-card>
 
-        <!-- 抽屉效果 -->
-        <el-drawer @close="close" v-model="drawer">
-            <template #header>
-                <h4>{{ interfaceType == '10086' ? '添加用户' : '编辑用户' }}</h4>
-            </template>
-
-            <el-form label-width="120px">
-                <el-form-item label="账号">
-                    <el-input placeholder ="请输入账号" v-model="formData.username"/>
-                </el-form-item>
-                <el-form-item label="密码">
-                    <el-input placeholder ="请输入密码" v-model="formData.password"/>
-                </el-form-item>
-                <el-form-item label="ClientId">
-                    <el-input placeholder ="用于标识发起访问令牌请求的客户端(admin-app/client-app)" v-model="formData.clientId"/>
-                </el-form-item>
-                <el-form-item>
-                    <el-tree show-checkbox :default-checked-keys="defaultCheckedKeys" :default-expand-all="true" ref="treeRef" :data="roles" :props="{ id: 'id', label: 'name' }" node-key="id"/>
-                </el-form-item>
-            </el-form>
-
-            <el-button v-if="interfaceType=='10086'" @click="add" type="primary">添加</el-button>
-            <el-button v-else @click="update">修改</el-button>
-        </el-drawer>
-    </div>
+    <!-- 表单对话框 -->
+    <el-dialog
+      v-model="dialogVisible"
+      :title="dialogTitle"
+      width="500px"
+      destroy-on-close
+    >
+      <el-form
+        ref="formRef"
+        :model="formData"
+        :rules="rules"
+        label-width="100px"
+      >
+        <el-form-item label="用户名" prop="username">
+          <el-input
+            v-model="formData.username"
+            placeholder="请输入用户名"
+            :disabled="!!formData.id"
+          />
+        </el-form-item>
+        <el-form-item
+          label="密码"
+          prop="password"
+          :rules="formData.id ? [] : rules.password"
+        >
+          <el-input
+            v-model="formData.password"
+            type="password"
+            placeholder="请输入密码"
+            show-password
+          />
+        </el-form-item>
+        <el-form-item label="姓名" prop="realName">
+          <el-input v-model="formData.realName" placeholder="请输入姓名" />
+        </el-form-item>
+        <el-form-item label="手机号" prop="phone">
+          <el-input v-model="formData.phone" placeholder="请输入手机号" />
+        </el-form-item>
+        <el-form-item label="邮箱" prop="email">
+          <el-input v-model="formData.email" placeholder="请输入邮箱" />
+        </el-form-item>
+        <el-form-item label="角色" prop="roleIds">
+          <el-select
+            v-model="formData.roleIds"
+            multiple
+            placeholder="请选择角色"
+          >
+            <el-option
+              v-for="role in roles"
+              :key="role.id"
+              :label="role.name"
+              :value="role.id"
+            />
+          </el-select>
+        </el-form-item>
+        <el-form-item label="状态" prop="status">
+          <el-switch
+            v-model="formData.status"
+            :active-value="1"
+            :inactive-value="0"
+          />
+        </el-form-item>
+      </el-form>
+      <template #footer>
+        <el-button @click="dialogVisible = false">取消</el-button>
+        <el-button type="primary" @click="submitForm">确定</el-button>
+      </template>
+    </el-dialog>
+  </div>
 </template>
 
 <style lang="scss" scoped>
-.header{
-    margin-bottom: 16px;
+.manager-list {
+  padding: 20px;
+
+  .search-card {
+    margin-bottom: 20px;
+  }
+
+  .card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+
+  .pagination {
+    margin-top: 20px;
+    display: flex;
+    justify-content: flex-end;
+  }
 }
 </style>

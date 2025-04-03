@@ -1,195 +1,209 @@
-<script>
-import { longShortAccountRatio,supportCoin,loanRatio,longShortRatioByBinance } from '@/api/user'
-import * as echarts from 'echarts';
+<script setup>
+import { ref, onMounted } from 'vue'
+import { ElMessage, ElMessageBox } from 'element-plus'
+import { useRouter } from 'vue-router'
 
-export default {
-    data () {
-        return {
-            legendData: [],
-            series: [],
-            data: {},
-            data2: [],
+// 路由实例
+const router = useRouter()
 
-            legendDataTwo: [],
-            seriesTwo: [],
-            dataTwo: {},
-            apiCalls: [
-                //"SATS","ORDI","STX","AIDOGE","BTC", "AXS","DOT",
-                //"ARB","OP","APT","AVAX","AAVE","ATOM","ADA","MATIC","LINK","SUI"
-                //"LTC","ETH","FIL","XRP","YFI","YFII","SOL","GRT","IMX",
-                //"SAND","SHIB","DOGE","PEPE","EOS","ETC","ETHW","FLOW","GALA"
-                //"AR","ANT","PEOPLE","TRX","WAVES","REN","SLP","BAT","BCH",
-                //"SUSHI","UNI","MANA","MASK","KSM","LDO","MAGIC","CFX","COMP","CRV",
-                "BNB","RON","NEAR","MINA","MKR","WLD","RNDR","DYDX","ENS",
+// 表格数据
+const tableData = ref([])
+// 加载状态
+const loading = ref(false)
+// 分页配置
+const pagination = ref({
+  currentPage: 1,
+  pageSize: 10,
+  total: 0
+})
 
-                //波动大在底部
-                //"FIL","DOGE","SLP","MASK","RON","APT","MATIC","SUI","ORDI",
-
-            ],
-            currentApiCallIndex: 0, // 记录当前轮询的apiCall索引
-        }
-    },
-    methods: {
-        //获取所有支持币种
-        supportCoin(){
-            supportCoin().then(res => {
-                console.log(res);
-            })
-        },
-        //合约多空持仓人数比
-        async changeType(){
-            for(var yy = 0; yy < 5; yy++){
-                // const apiCall = { ccy: this.apiCalls[this.currentApiCallIndex], begin: new Date().getTime() - 30 * 24 * 60 * 60 * 1000, end: new Date().getTime(), period: "1H" };
-                const apiCall = {
-                    symbol: "BTCUSDT", 
-                    period: "1h",
-                    limit: 30,
-                    startTime: new Date().getTime() - 30 * 24 * 60 * 60 * 1000, 
-                    endTime: new Date().getTime()
-                };
-                const response = await longShortRatioByBinance(apiCall);
-                console.log("22222222222222222222222222", response)
-                
-                
-                // this.data2=[];
-                // this.data2.push(...response.data.map(item => [new Date(parseInt(item[0])).toLocaleString(), item[1]]));
-                // // 查找是否已存在该币种的 series
-                // const ccy = apiCall.ccy;
-                // const existingSeries = this.series.find(series => series.name === ccy);
-                // //如果已存在，则更新数据；否则，添加新的 series
-                // if (existingSeries) {
-                //     existingSeries.data = this.data2;
-                // } else {
-                //     this.series.push({
-                //         name: ccy,
-                //         type: 'line',
-                //         showSymbol: false,
-                //         smooth: true,
-                //         emphasis: {
-                //             focus: 'series'
-                //         },
-                //         endLabel: {
-                //             show: true,
-                //             formatter: '{a}',
-                //             distance: 5
-                //         },
-                //         data: this.data2
-                //     });
-                //     this.legendData.push(ccy);
-                // }
-                // this.initCharts('main', '合约多空持仓人数比', this.legendData, this.series);
-
-                // // 增加索引，循环选择下一个 apiCall
-                // this.currentApiCallIndex = (this.currentApiCallIndex + 1) % this.apiCalls.length;
-            }
-        },
-        // 启动定时器，在每5秒调用一次changeType方法
-        startPolling() {
-            this.changeType();
-            // this.pollingInterval = setInterval(() => {
-            //     this.changeType();
-            // }, 100000);
-        },
-        // 停止定时器
-        stopPolling() {
-            clearInterval(this.pollingInterval);
-        },
-        //杠杆多空比
-        async changeTypeTwo(){
-            const responses = await Promise.all(this.apiCalls.map(apiCall => loanRatio(apiCall)));
-
-            responses.forEach((res, index) => {
-                const ccy = this.apiCalls[index].ccy;
-                (this.dataTwo[ccy] ??= []).push(...res.data.map(item => [new Date(parseInt(item[0])).toLocaleString(), item[1]]));
-
-                if (!this.seriesTwo.find(series => series.name === ccy)) {
-                    this.seriesTwo.push({
-                        name: ccy,
-                        type: 'line',
-                        showSymbol: false,
-                        data: this.dataTwo[ccy]
-                    });
-                    this.legendDataTwo.push(ccy);
-                }
-            });
-
-            this.initCharts('main2','杠杆多空比 ', this.legendDataTwo, this.seriesTwo);
-        },
-        //初始化图表
-        initCharts(id, title, legendData, series){
-
-            let chart = echarts.init(document.getElementById(id));
-
-            chart.setOption({
-                title: {
-                    text: title
-                },
-                grid: {
-                    left: '3%',
-                    right: '4%',
-                    bottom: '3%',
-                    containLabel: true
-                },
-                xAxis: {
-                    //type: value数值轴、category类目轴、time时间轴、log对数轴
-                    type: 'time',
-                    splitLine: {
-                        //是否现实分隔线
-                        show: true
-                    }
-                },
-                yAxis: {
-                    type: 'value',
-                    //留白策略
-                    boundaryGap: [0, '2%'],
-                    splitLine: {
-                        show: true
-                    },
-                    scale: true,
-                },
-                legend: {
-                    data: legendData
-                },
-                series: series,
-                tooltip: {
-                    //坐标轴触发
-                    trigger: 'axis',
-                    axisPointer: {
-                        type: 'cross'
-                    }
-                },
-            });
-        }
-    },
-
-    
-
-    mounted() {
-        //合约多空持仓人数比 
-        this.startPolling();
-        //this.changeType();
-        // this.changeTypeTwo();
-        // this.supportCoin();
-    },
-    beforeDestroy() {
-        // 在组件销毁前停止轮询
-        this.stopPolling();
-    }
+/**
+ * 获取轮播图列表
+ */
+const fetchBannerList = async () => {
+  try {
+    loading.value = true
+    // 调用获取列表接口
+    // const res = await getBannerList({
+    //   page: pagination.value.currentPage,
+    //   size: pagination.value.pageSize
+    // })
+    // tableData.value = res.data.list
+    // pagination.value.total = res.data.total
+  } catch (error) {
+    console.error('获取列表失败:', error)
+    ElMessage.error('获取列表失败')
+  } finally {
+    loading.value = false
+  }
 }
+
+/**
+ * 处理删除操作
+ * @param {number} id - 轮播图ID
+ */
+const handleDelete = async (id) => {
+  try {
+    await ElMessageBox.confirm('确认删除该轮播图吗？', '提示', {
+      type: 'warning'
+    })
+    // 调用删除接口
+    // await deleteBanner(id)
+    ElMessage.success('删除成功')
+    fetchBannerList()
+  } catch (error) {
+    if (error !== 'cancel') {
+      console.error('删除失败:', error)
+      ElMessage.error('删除失败')
+    }
+  }
+}
+
+/**
+ * 处理状态变更
+ * @param {Object} row - 行数据
+ */
+const handleStatusChange = async (row) => {
+  try {
+    // 调用更新接口
+    // await updateBannerStatus({
+    //   id: row.id,
+    //   status: row.status
+    // })
+    ElMessage.success('状态更新成功')
+  } catch (error) {
+    console.error('状态更新失败:', error)
+    ElMessage.error('状态更新失败')
+    row.status = !row.status
+  }
+}
+
+/**
+ * 处理排序变更
+ * @param {Object} row - 行数据
+ */
+const handleSortChange = async (row) => {
+  try {
+    // 调用更新接口
+    // await updateBannerSort({
+    //   id: row.id,
+    //   sort: row.sort
+    // })
+    ElMessage.success('排序更新成功')
+  } catch (error) {
+    console.error('排序更新失败:', error)
+    ElMessage.error('排序更新失败')
+    fetchBannerList()
+  }
+}
+
+// 页面加载时获取数据
+onMounted(fetchBannerList)
 </script>
 
 <template>
-    <div id="main"></div>
-    <div id="main2"></div>
+  <div class="banner-list">
+    <el-card>
+      <template #header>
+        <div class="card-header">
+          <span>轮播图列表</span>
+          <el-button type="primary" @click="router.push('/banner/add')">
+            添加轮播图
+          </el-button>
+        </div>
+      </template>
+
+      <el-table
+        v-loading="loading"
+        :data="tableData"
+        border
+        style="width: 100%"
+      >
+        <el-table-column prop="title" label="标题" min-width="150" />
+        
+        <el-table-column label="图片" width="200">
+          <template #default="{ row }">
+            <el-image
+              :src="row.imageUrl"
+              :preview-src-list="[row.imageUrl]"
+              fit="cover"
+              class="banner-image"
+            />
+          </template>
+        </el-table-column>
+
+        <el-table-column prop="link" label="链接" min-width="200" show-overflow-tooltip />
+
+        <el-table-column label="排序" width="120">
+          <template #default="{ row }">
+            <el-input-number
+              v-model="row.sort"
+              :min="0"
+              :max="999"
+              @change="handleSortChange(row)"
+            />
+          </template>
+        </el-table-column>
+
+        <el-table-column label="状态" width="100">
+          <template #default="{ row }">
+            <el-switch
+              v-model="row.status"
+              :active-value="1"
+              :inactive-value="0"
+              @change="handleStatusChange(row)"
+            />
+          </template>
+        </el-table-column>
+
+        <el-table-column label="操作" width="150" fixed="right">
+          <template #default="{ row }">
+            <el-button
+              type="danger"
+              size="small"
+              @click="handleDelete(row.id)"
+            >
+              删除
+            </el-button>
+          </template>
+        </el-table-column>
+      </el-table>
+
+      <div class="pagination">
+        <el-pagination
+          v-model:current-page="pagination.currentPage"
+          v-model:page-size="pagination.pageSize"
+          :total="pagination.total"
+          :page-sizes="[10, 20, 50, 100]"
+          layout="total, sizes, prev, pager, next"
+          @size-change="fetchBannerList"
+          @current-change="fetchBannerList"
+        />
+      </div>
+    </el-card>
+  </div>
 </template>
 
 <style lang="scss" scoped>
-#main {
-    height: 1100px;
-    background-color: white;
-}
-#main2 {
-    height: 1000px;
-    background-color: white;
+.banner-list {
+  padding: 20px;
+
+  .card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+
+  .banner-image {
+    width: 100px;
+    height: 60px;
+    border-radius: 4px;
+  }
+
+  .pagination {
+    margin-top: 20px;
+    display: flex;
+    justify-content: flex-end;
+  }
 }
 </style>

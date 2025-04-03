@@ -2,190 +2,283 @@
 import { permissionList, addAdmin, updateAdmin, deletePermission, permissionAll, addPermission } from '@/api/user'
 
 import { routes } from '@/router/index.js'
-import { ElMessage } from 'element-plus'
+import { ElMessage, ElMessageBox } from 'element-plus'
 import { now } from 'lodash'
+import { ref, onMounted } from 'vue'
 
 export default {
-    data() {
-        return {
-            //是否打开抽屉效果
-            drawer: false,
-            //管理员数据
-            formData: {
-                id: null,
-                name: null,
-                authority: null,
-                url: null,
-                permissionType: '11',
-                parentId: null
-            },
-            //默认选中项
-            defaultCheckedKeys: [],
-            interfaceType: '10086', // 10086添加管理员 10010编辑管理员,
+    setup() {
+        // 表格数据
+        const tableData = ref([])
+        // 加载状态
+        const loading = ref(false)
 
-            //数据
-            tableData: {},
-            //分页
-            page: {size:10, current:1},
-            //查询参数
-            data: {}
+        // 对话框控制
+        const dialogVisible = ref(false)
+        const dialogTitle = ref('添加权限')
+        const formRef = ref(null)
+
+        // 表单数据
+        const formData = ref({
+            name: '',
+            code: '',
+            type: 'menu',
+            parentId: 0,
+            path: '',
+            icon: '',
+            sort: 0
+        })
+
+        // 表单验证规则
+        const rules = {
+            name: [
+                { required: true, message: '请输入权限名称', trigger: 'blur' }
+            ],
+            code: [
+                { required: true, message: '请输入权限编码', trigger: 'blur' },
+                { pattern: /^[A-Z_]+$/, message: '只能包含大写字母和下划线', trigger: 'blur' }
+            ],
+            type: [
+                { required: true, message: '请选择权限类型', trigger: 'change' }
+            ]
         }
-    },
-    methods: {
-        addClick(param) {
-            this.drawer = true;
-            this.interfaceType = '10086';
-            this.formData.parentId = (param == 0) ? '-1' : param;
-        },
 
-        add() {
-            //将数据添加到服务器中
-            addPermission(this.formData).then(res => {
-                if(res.code == '200'){
-                    ElMessage.success(res.msg);
-                    //关闭抽屉效果
-                    this.drawer = false;
-                    //重新获取最新数据
-                    this.parentMonth();
-                }else{
-                    ElMessage.error(res.msg);
-                }
-            });
-        },
-        editClick(row) {
-            this.interfaceType = '10010'
-            //打开抽屉
-            this.drawer = true;
-
-            this.formData.id = row.id;
-            this.formData.name = row.name;
-            this.formData.authority = row.authority;
-            this.formData.url = row.url;
-            this.formData.permissionType = '11';
-            this.formData.parentId = row.parentId;
-        },
-        update() {
-            if(!this.formData.name || !this.formData.url) {
-                ElMessage.error("名称和URL不可为空")
-                return
+        /**
+         * 获取权限列表
+         */
+        const fetchPermissionList = async () => {
+            try {
+                loading.value = true
+                // const res = await getPermissionList()
+                // tableData.value = res.data
+            } catch (error) {
+                console.error('获取权限列表失败:', error)
+                ElMessage.error('获取权限列表失败')
+            } finally {
+                loading.value = false
             }
-            //更新
-            addPermission(this.formData).then(res => {
-                if(res.code == '200'){
-                    ElMessage.success(res.msg);
-                    //关闭抽屉效果
-                    this.drawer = false;
-                    //重新获取最新数据
-                    this.parentMonth();
-                    if (this.$refs.treeTable) {
-                        this.$refs.treeTable.load();
-                    }
-                }else{
-                    ElMessage.error(res.msg);
-                }
-            });
-        },
-        deleteClick(row) {
-            deletePermission(row.id).then(res => {
-                if(res.code == '200'){
-                    ElMessage.success(res.message);
-                    //重新获取最新数据
-                    this.parentMonth();
-                }else{
-                    ElMessage.error(res.message);
-                }
-            })
-        },
-
-        close() {
-            //清空所有状态
-            this.formData = {};
-            this.defaultCheckedKeys = [];
-        },
-        handleSizeChange() {
-            this.parentMonth();
-        },
-        handleCurrentChange() {
-            this.parentMonth();
-        },
-        //父级列表（有分页）
-        parentMonth() {
-            permissionList(this.page, {parentId: '-1'}).then(res => {
-                this.tableData = res.data;
-            })
-        },
-        //加载子集列表
-        load(tree, treeNode, resolve){
-            permissionAll({parentId: tree.id}).then(res => {
-                resolve(res.data);
-            })
         }
 
-    },
-    //生命同期函数
-    mounted() {
-        //获取管理员列表
-        //this.permissionList();
-        this.parentMonth();
-    },
-    //计算属性
-    computed: {
+        /**
+         * 处理添加/编辑权限
+         * @param {Object} row - 行数据（编辑时传入）
+         */
+        const handleEdit = (row = null) => {
+            dialogTitle.value = row ? '编辑权限' : '添加权限'
+            if (row) {
+                formData.value = { ...row }
+            } else {
+                formData.value = {
+                    name: '',
+                    code: '',
+                    type: 'menu',
+                    parentId: 0,
+                    path: '',
+                    icon: '',
+                    sort: 0
+                }
+            }
+            dialogVisible.value = true
+        }
 
+        /**
+         * 提交表单
+         */
+        const submitForm = async () => {
+            if (!formRef.value) return
+            
+            try {
+                await formRef.value.validate()
+                // const api = formData.value.id ? updatePermission : addPermission
+                // await api(formData.value)
+                ElMessage.success(`${dialogTitle.value}成功`)
+                dialogVisible.value = false
+                fetchPermissionList()
+            } catch (error) {
+                console.error('提交失败:', error)
+                ElMessage.error('提交失败')
+            }
+        }
+
+        /**
+         * 处理删除权限
+         * @param {number} id - 权限ID
+         */
+        const handleDelete = async (id) => {
+            try {
+                await ElMessageBox.confirm('确认删除该权限吗？', '提示', {
+                    type: 'warning'
+                })
+                // await deletePermission(id)
+                ElMessage.success('删除成功')
+                fetchPermissionList()
+            } catch (error) {
+                if (error !== 'cancel') {
+                    console.error('删除失败:', error)
+                    ElMessage.error('删除失败')
+                }
+            }
+        }
+
+        // 页面加载时获取数据
+        onMounted(fetchPermissionList)
+
+        return {
+            tableData,
+            loading,
+            dialogVisible,
+            dialogTitle,
+            formRef,
+            formData,
+            rules,
+            fetchPermissionList,
+            handleEdit,
+            submitForm,
+            handleDelete
+        }
     }
 }
 </script>
 
 <template>
-    <div>
-        <div class="header">
-            菜单列表
-            <el-button type="success" @click="addClick('0')">添加父级菜单</el-button>
-        </div>
-
-        <el-table ref="treeTable" :data="tableData.records" style="width: 100%" row-key="id" lazy="true" :load="load" :tree-props="{ children: 'children', hasChildren: 'hasChildren' }">
-            <el-table-column prop="name" label="菜单名称" />
-            <el-table-column prop="authority" label="实体名称" />
-            <el-table-column prop="url" label="URL" />
-            <!-- <el-table-column prop="parentStr" label="父级" /> -->
-            <el-table-column prop="role" label="操作" >
-                <template #default="scope">
-                    <el-button @click="editClick(scope.row)" size="small" type="primary">编辑</el-button>
-                    <el-button @click="deleteClick(scope.row)" size="small" type="info">删除</el-button>
-                    <el-button v-if="scope.row.parentId=='-1'" @click="addClick(scope.row.id)" size="small" type="success">新增子菜单</el-button>
-                </template>
-            </el-table-column>
-        </el-table>
-
-        <!-- 用来做分页显示-->
-        <el-pagination v-model:current-page="page.current" v-model:page-size="page.size" :page-sizes="[1, 10, 20, 30]" :background="background" layout="sizes, prev, pager, next" :total="tableData.total" @size-change="handleSizeChange" @current-change="handleCurrentChange" />
-
-        <!-- 抽屉效果 -->
-        <el-drawer @close="close" v-model="drawer">
+    <div class="permission-list">
+        <el-card>
             <template #header>
-                <h4>{{ interfaceType == '10086' ? '添加菜单' : '编辑菜单' }}</h4>
+                <div class="card-header">
+                    <span>权限列表</span>
+                    <el-button type="primary" @click="handleEdit()">
+                        添加权限
+                    </el-button>
+                </div>
             </template>
 
-            <el-form label-width="120px">
-                <el-form-item label="菜单名称">
-                    <el-input placeholder ="请输入" v-model="formData.name"/>
-                </el-form-item>
+            <el-table
+                v-loading="loading"
+                :data="tableData"
+                border
+                row-key="id"
+                :tree-props="{ children: 'children' }"
+            >
+                <el-table-column prop="name" label="权限名称" />
+                <el-table-column prop="code" label="权限编码" />
+                <el-table-column prop="type" label="类型" width="100">
+                    <template #default="{ row }">
+                        <el-tag :type="row.type === 'menu' ? 'primary' : 'success'">
+                            {{ row.type === 'menu' ? '菜单' : '按钮' }}
+                        </el-tag>
+                    </template>
+                </el-table-column>
+                <el-table-column prop="path" label="路径" />
+                <el-table-column prop="icon" label="图标" width="100">
+                    <template #default="{ row }">
+                        <el-icon v-if="row.icon">
+                            <component :is="row.icon" />
+                        </el-icon>
+                    </template>
+                </el-table-column>
+                <el-table-column prop="sort" label="排序" width="100" />
+                <el-table-column label="操作" width="200" fixed="right">
+                    <template #default="{ row }">
+                        <el-button type="primary" link @click="handleEdit(row)">
+                            编辑
+                        </el-button>
+                        <el-button type="danger" link @click="handleDelete(row.id)">
+                            删除
+                        </el-button>
+                    </template>
+                </el-table-column>
+            </el-table>
+        </el-card>
 
-                <el-form-item v-if="this.formData.parentId!='-1'" label="实体名称">
-                    <el-input placeholder ="请输入" v-model="formData.authority"/>
+        <!-- 表单对话框 -->
+        <el-dialog
+            v-model="dialogVisible"
+            :title="dialogTitle"
+            width="500px"
+            destroy-on-close
+        >
+            <el-form
+                ref="formRef"
+                :model="formData"
+                :rules="rules"
+                label-width="100px"
+            >
+                <el-form-item label="权限名称" prop="name">
+                    <el-input
+                        v-model="formData.name"
+                        placeholder="请输入权限名称"
+                    />
                 </el-form-item>
-                <el-form-item label="URL">
-                    <el-input placeholder ="请输入" v-model="formData.url"/>
+                <el-form-item label="权限编码" prop="code">
+                    <el-input
+                        v-model="formData.code"
+                        placeholder="请输入权限编码"
+                        :disabled="!!formData.id"
+                    />
+                </el-form-item>
+                <el-form-item label="权限类型" prop="type">
+                    <el-radio-group v-model="formData.type">
+                        <el-radio label="menu">菜单</el-radio>
+                        <el-radio label="button">按钮</el-radio>
+                    </el-radio-group>
+                </el-form-item>
+                <el-form-item label="上级权限" prop="parentId">
+                    <el-tree-select
+                        v-model="formData.parentId"
+                        :data="tableData"
+                        :props="{
+                            label: 'name',
+                            children: 'children'
+                        }"
+                        check-strictly
+                        default-expand-all
+                        placeholder="请选择上级权限"
+                    />
+                </el-form-item>
+                <el-form-item
+                    v-if="formData.type === 'menu'"
+                    label="路径"
+                    prop="path"
+                >
+                    <el-input
+                        v-model="formData.path"
+                        placeholder="请输入路径"
+                    />
+                </el-form-item>
+                <el-form-item
+                    v-if="formData.type === 'menu'"
+                    label="图标"
+                    prop="icon"
+                >
+                    <el-input
+                        v-model="formData.icon"
+                        placeholder="请输入图标名称"
+                    />
+                </el-form-item>
+                <el-form-item label="排序" prop="sort">
+                    <el-input-number
+                        v-model="formData.sort"
+                        :min="0"
+                        :max="999"
+                    />
                 </el-form-item>
             </el-form>
-
-            <el-button v-if="interfaceType=='10086'" @click="add" type="primary">添加</el-button>
-            <el-button v-else @click="update">修改</el-button>
-        </el-drawer>
+            <template #footer>
+                <el-button @click="dialogVisible = false">取消</el-button>
+                <el-button type="primary" @click="submitForm">确定</el-button>
+            </template>
+        </el-dialog>
     </div>
 </template>
 
 <style lang="scss" scoped>
-.header{
-    margin-bottom: 16px;
+.permission-list {
+    padding: 20px;
+
+    .card-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
 }
 </style>

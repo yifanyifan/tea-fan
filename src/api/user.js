@@ -2,6 +2,7 @@
 import ajax from '@/utils/request';
 import ajaxOkx from '@/utils/requestOkx';
 import ajaxBinance from '@/utils/requestBinance';
+import request from '@/utils/request'
 
 // 管理系统登录接口的封装
 export function loginFn(params) {
@@ -227,9 +228,23 @@ export function updateAdmin(params) {
 
 
 //获取用户列表
-export function getUserList() {
-    return ajax({
+export const getUserList = (params) => {
+    return request({
         url: '/user/list',
-        method: 'GET'
-    });
+        method: 'get',
+        params
+    })
+}
+
+/**
+ * 更新用户状态
+ * @param {Object} data - 更新数据
+ * @returns {Promise}
+ */
+export const updateUserStatus = (data) => {
+    return request({
+        url: '/user/status',
+        method: 'put',
+        data
+    })
 }

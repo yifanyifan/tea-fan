@@ -1,70 +1,137 @@
-<script>
-import * as echarts from 'echarts';
+<script setup>
+import { ref, onMounted, onBeforeUnmount } from 'vue'
+import * as echarts from 'echarts'
 
-export default {
-    data() {
-        return {
-            myChart: null
+// 图表实例引用
+const chartRef = ref(null)
+let chartInstance = null
+
+/**
+ * 初始化图表配置
+ * @returns {Object} ECharts配置项
+ */
+const getChartOption = () => {
+  return {
+    title: {
+      text: '销售数据统计',
+      left: 'center'
+    },
+    tooltip: {
+      trigger: 'axis',
+      axisPointer: {
+        type: 'cross',
+        label: {
+          backgroundColor: '#6a7985'
         }
+      }
     },
-    mounted() {
-        // 1. 将表格绑定在指定标签上
-        this.myChart = echarts.init(document.getElementById('box'));
-        //2. 给表格添加数据
-        this.myChart.setOption({
-            tooltip: {
-                formatter: '{a} <br/>{b} : {c}%'
-            },
-            series: [
-                {
-                name: 'Pressure',
-                type: 'gauge',
-                progress: {
-                    show: true
-                },
-                detail: {
-                    valueAnimation: true,
-                    formatter: '{value}'
-                },
-                data: [
-                    {
-                    value: 0,
-                    name: 'SCORE'
-                    }
-                ]
-                }
-            ]
-        });
-
-        let num = 0
-        setInterval(() => {
-            if(num >= 100) {
-                num = 100
-            }
-            this.myChart.setOption({
-                series: [
-                    {
-                        data: [
-                            {
-                                value: num += 10,
-                                name: 'SCORE'
-                            }
-                        ]
-                    }
-                ]
-            })
-        }, 2000)
+    legend: {
+      data: ['销售额', '订单量'],
+      top: '30px'
     },
+    grid: {
+      left: '3%',
+      right: '4%',
+      bottom: '3%',
+      containLabel: true
+    },
+    xAxis: {
+      type: 'category',
+      boundaryGap: false,
+      data: ['1月', '2月', '3月', '4月', '5月', '6月']
+    },
+    yAxis: [
+      {
+        type: 'value',
+        name: '销售额',
+        position: 'left'
+      },
+      {
+        type: 'value',
+        name: '订单量',
+        position: 'right'
+      }
+    ],
+    series: [
+      {
+        name: '销售额',
+        type: 'line',
+        smooth: true,
+        data: [3000, 2800, 3500, 5000, 4800, 6000],
+        itemStyle: {
+          color: '#409EFF'
+        }
+      },
+      {
+        name: '订单量',
+        type: 'bar',
+        yAxisIndex: 1,
+        data: [150, 130, 180, 240, 220, 280],
+        itemStyle: {
+          color: '#67C23A'
+        }
+      }
+    ]
+  }
 }
 
+/**
+ * 初始化图表
+ */
+const initChart = () => {
+  if (!chartRef.value) return
+  
+  chartInstance = echarts.init(chartRef.value)
+  chartInstance.setOption(getChartOption())
+}
+
+/**
+ * 处理窗口大小变化
+ */
+const handleResize = () => {
+  chartInstance?.resize()
+}
+
+// 生命周期钩子
+onMounted(() => {
+  initChart()
+  window.addEventListener('resize', handleResize)
+})
+
+onBeforeUnmount(() => {
+  window.removeEventListener('resize', handleResize)
+  chartInstance?.dispose()
+})
 </script>
 
 <template>
-    <div id="box"></div>
+  <div class="echarts-view">
+    <el-card class="chart-card">
+      <template #header>
+        <div class="card-header">
+          <span>基础图表示例</span>
+        </div>
+      </template>
+      <div ref="chartRef" class="chart-container" />
+    </el-card>
+  </div>
 </template>
 
 <style lang="scss" scoped>
-#box {
-    height: 600px;
+.echarts-view {
+  padding: 20px;
+
+  .chart-card {
+    .card-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .chart-container {
+      height: 400px;
+      width: 100%;
+    }
+  }
 }
 </style>
