@@ -1,107 +1,199 @@
-<script>
-export default {
-    data() {
-        return {
-            map: null
-        }
-    },
-    methods: {
-        search() {
-            // console.log(event.target.value);
-            // var local = new BMapGL.LocalSearch(this.map, {
-            //     renderOptions:{ map: this.map }
-            // });
-            // local.search(event.target.value);
-            var options = {
-                onSearchComplete: function(results){
-                    // 判断状态是否正确
-                    if (local.getStatus() == BMAP_STATUS_SUCCESS){
-                        var s = [];
-                        for (var i = 0; i < results.getCurrentNumPois(); i ++){
-                            s.push(results.getPoi(i).title + ", " + results.getPoi(i).address);
-                        }
-                        document.getElementById("r-result").innerHTML = s.join("<br/>");
-                    }
-                }
-            };
-            var local = new BMapGL.LocalSearch(this.map, options);
-            local.search(event.target.value);
-        }
-    },
-    mounted() {
-        this.map = new BMapGL.Map("container");
-        var point = new BMapGL.Point(116.404, 39.915);
-        // 设置地图显示位置和缩放比例
-        this.map.centerAndZoom(point, 15); 
-        // 开启滚轮缩放
-        this.map.enableScrollWheelZoom(true);
+<script setup>
+import { ref, onMounted, onBeforeUnmount } from 'vue'
+import { ElMessage } from 'element-plus'
+import * as echarts from 'echarts'
+// 引入中国地图数据
+import 'echarts/map/js/china'
 
-        this.map.setHeading(0);   //设置地图旋转角度
-        this.map.setTilt(0);       //设置地图的倾斜角度
+// 图表实例引用
+const chartRef = ref(null)
+let chartInstance = null
 
-        // 1.标准地图：BMAP_NORMAL_MAP
-        // 2.地球模式：BMAP_EARTH_MAP
-        // 3.普通卫星地图：BMAP_SATELLITE_MAP 
-        this.map.setMapType(BMAP_NORMAL_MAP);      // 设置地图类型为地球模式
-        // console.log(window);
+// 加载状态
+const loading = ref(false)
 
-        var scaleCtrl = new BMapGL.ScaleControl({
-            anchor: BMAP_ANCHOR_TOP_RIGHT 
-        });  // 添加比例尺控件
-        this.map.addControl(scaleCtrl);
-        var zoomCtrl = new BMapGL.ZoomControl();  // 添加缩放控件
-        this.map.addControl(zoomCtrl);
-        var cityCtrl = new BMapGL.CityListControl();  // 添加城市列表控件
-        this.map.addControl(cityCtrl);
-        //移除控件
-        //map.removeControl(new BMapGL.ScaleControl(opts));
-        // 更改为自定义的地图样式（在百度控制台上配置的）
-        // map.setMapStyleV2({     
-        //     styleId: 'b7a44286bc3103f5539b576b15fab8d3'
-        // });
-         
-        //标记点
-        // var marker = new BMapGL.Marker(point);        // 创建标注   
-        // this.map.addOverlay(marker);                     // 将标注添加到地图中
-        //折线图
-        // var polyline = new BMapGL.Polyline([
-        //     new BMapGL.Point(116.399, 39.910),
-        //     new BMapGL.Point(116.405, 39.920),
-        //     new BMapGL.Point(116.425, 39.900),
-        //     new BMapGL.Point(116.525, 40.000)
-        // ], {strokeColor:"blue", strokeWeight:2, strokeOpacity:0.5});
-        // this.map.addOverlay(polyline);
-        // 将地图位置调整到当前位置（根据浏览器，可以改为IP定位!!!）
-        var geolocation = new BMapGL.Geolocation();
-        const _this = this;
-        geolocation.getCurrentPosition(function(r){
-            // console.log(r);
-            if(this.getStatus() == BMAP_STATUS_SUCCESS){
-                var mk = new BMapGL.Marker(r.point);
-                _this.map.addOverlay(mk);
-                _this.map.panTo(r.point);
-                // console.log('您的位置：' + r.point.lng + ',' + r.point.lat);
-            }
-            else {
-                alert('failed' + this.getStatus());
-            }        
-        });
+// 地图数据
+const mapData = ref([
+  { name: '北京', value: 199 },
+  { name: '上海', value: 299 },
+  { name: '广东', value: 399 },
+  { name: '深圳', value: 299 },
+  // 可以添加更多数据...
+])
+
+/**
+ * 获取地图配置项
+ * @returns {Object} ECharts配置项
+ */
+const getChartOption = () => {
+  return {
+    title: {
+      text: '全国数据分布图',
+      left: 'center'
     },
+    tooltip: {
+      trigger: 'item',
+      formatter: '{b}: {c}'
+    },
+    visualMap: {
+      min: 0,
+      max: 500,
+      left: 'left',
+      top: 'bottom',
+      text: ['高', '低'],
+      calculable: true,
+      inRange: {
+        color: ['#e0ffff', '#006edd']
+      }
+    },
+    series: [
+      {
+        name: '数据量',
+        type: 'map',
+        map: 'china',
+        roam: true, // 开启缩放和平移
+        emphasis: {
+          label: {
+            show: true
+          },
+          itemStyle: {
+            areaColor: '#66ccff'
+          }
+        },
+        data: mapData.value
+      }
+    ]
+  }
 }
+
+/**
+ * 初始化图表
+ */
+const initChart = () => {
+  if (!chartRef.value) return
+  
+  chartInstance = echarts.init(chartRef.value)
+  chartInstance.setOption(getChartOption())
+}
+
+/**
+ * 更新图表数据
+ * @param {Array} data - 新的数据数组
+ */
+const updateChartData = (data) => {
+  if (!chartInstance) return
+  
+  mapData.value = data
+  chartInstance.setOption({
+    series: [{
+      data: data
+    }]
+  })
+}
+
+/**
+ * 获取地图数据
+ */
+const fetchMapData = async () => {
+  try {
+    loading.value = true
+    // 这里添加实际的API调用
+    // const res = await getMapData()
+    // updateChartData(res.data)
+  } catch (error) {
+    console.error('获取地图数据失败:', error)
+    ElMessage.error('获取地图数据失败')
+  } finally {
+    loading.value = false
+  }
+}
+
+/**
+ * 处理窗口大小变化
+ */
+const handleResize = () => {
+  chartInstance?.resize()
+}
+
+/**
+ * 处理地图点击事件
+ * @param {Object} params - 点击事件参数
+ */
+const handleMapClick = (params) => {
+  if (params.name) {
+    ElMessage.info(`点击了${params.name}，数据量：${params.value || 0}`)
+  }
+}
+
+// 生命周期钩子
+onMounted(() => {
+  initChart()
+  // 添加点击事件监听
+  chartInstance?.on('click', handleMapClick)
+  // 添加窗口大小变化监听
+  window.addEventListener('resize', handleResize)
+  // 获取数据
+  fetchMapData()
+})
+
+onBeforeUnmount(() => {
+  // 移除事件监听
+  chartInstance?.off('click')
+  window.removeEventListener('resize', handleResize)
+  // 销毁图表实例
+  chartInstance?.dispose()
+})
 </script>
 
-
 <template>
-    <h3>
-        地图搜索: <input type="text" @keyup.enter="search"/>
-    </h3>
-    <div id="container"></div> 
-    <section id="r-result"></section>
+  <div class="map-show">
+    <el-card>
+      <template #header>
+        <div class="card-header">
+          <span>地图展示</span>
+          <el-button-group>
+            <el-button type="primary" @click="fetchMapData">
+              刷新数据
+            </el-button>
+            <el-button
+              type="success"
+              @click="chartInstance?.dispatchAction({
+                type: 'restore'
+              })"
+            >
+              重置视图
+            </el-button>
+          </el-button-group>
+        </div>
+      </template>
+
+      <div
+        ref="chartRef"
+        class="chart-container"
+        v-loading="loading"
+        element-loading-text="加载中..."
+      />
+    </el-card>
+  </div>
 </template>
 
+<style lang="scss" scoped>
+.map-show {
+  padding: 20px;
 
-<style>
-#container {
+  .card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+
+  .chart-container {
     height: 600px;
+    width: 100%;
+  }
+
+  :deep(.el-card__body) {
+    padding: 10px;
+  }
 }
 </style>

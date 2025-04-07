@@ -229,3 +229,12 @@ const router = createRouter({
 
 // 导出路由
 export default router
+
+router.beforeEach((to, from, next) => {
+  const store = useStore()
+  if (to.path !== '/login' && !store.state.userInfo.loginStatus) {
+    next('/login')
+  } else {
+    next()
+  }
+})

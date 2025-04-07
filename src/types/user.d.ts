@@ -16,4 +16,21 @@ interface UserQueryParams {
   status?: 0 | 1
   page: number
   size: number
+}
+
+interface UserInfo {
+  loginStatus: boolean
+  adminname: string
+  token?: string
+}
+
+interface LoginForm {
+  username: string
+  password: string
+}
+
+interface LoginResponse {
+  code: string
+  data: UserInfo
+  msg: string
 } 

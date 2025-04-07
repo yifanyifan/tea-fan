@@ -7,8 +7,13 @@ import AsideCom from "@/components/AsideCom.vue";
 // import BreadCrumbCom from "@/components/BreadCrumbCom.vue";
 // import { getUserAll } from '@/api/user'
 import { mapMutations } from 'vuex'
+import { ref, computed, onMounted } from 'vue'
+import { useRouter } from 'vue-router'
+import { useStore } from 'vuex'
+import { ElMessage } from 'element-plus'
 
 export default {
+  name: 'HomeView',
   //数据属性
   data () {
     return {
@@ -55,6 +60,60 @@ export default {
       localStorage.clear();
       this.$router.push("/login");
     }
+  },
+  setup() {
+    const router = useRouter()
+    const store = useStore()
+    
+    // 侧边栏折叠状态
+    const collapse = ref(false)
+    
+    // 计算属性：侧边栏宽度
+    const asideWidth = computed(() => collapse.value ? '64px' : '200px')
+    // 计算属性：logo 右边距
+    const logoWidth = computed(() => collapse.value ? '0px' : '10px')
+    // 计算属性：头部图标
+    const headerLeft = computed(() => collapse.value ? Expand : Fold)
+
+    /**
+     * 检查登录状态
+     */
+    const checkLoginStatus = () => {
+      if (!store.state.userInfo.loginStatus) {
+        router.push('/login')
+      }
+    }
+
+    /**
+     * 退出登录
+     */
+    const handleLogout = () => {
+      // 清除本地存储
+      localStorage.clear()
+      // 重置 Vuex 状态
+      store.commit('updateUserInfo', {
+        loginStatus: false,
+        adminname: ''
+      })
+      store.commit('updateUserAll', null)
+      // 跳转到登录页
+      router.push('/login')
+      ElMessage.success('已退出登录')
+    }
+
+    // 生命周期钩子
+    onMounted(() => {
+      checkLoginStatus()
+    })
+
+    return {
+      url,
+      collapse,
+      asideWidth,
+      logoWidth,
+      headerLeft,
+      handleLogout
+    }
   }
 }
 </script>
@@ -63,13 +122,13 @@ export default {
   <div class="common-layout">
     <el-container>
       <!-- 左侧侧边栏 -->
-      <el-aside>
+      <el-aside :width="asideWidth">
         <div class="logo-box">
           <el-image style="width: 152px; height: 32px;" :src="url" />
         </div>
 
         <!-- 菜单，使用自定义组件,collapse 用来判断是否收起侧边栏的值 -->
-        <AsideCom :collapse="false"/>
+        <AsideCom :collapse="collapse"/>
       </el-aside>
 
       <!-- 右侧侧边栏 -->
@@ -78,7 +137,7 @@ export default {
           <el-icon size="30" @click="collapse = !collapse">
             <component :is="headerLeft"></component>
           </el-icon>
-          <span>欢迎 {{ $store.state.userInfo.adminname }} <button @click="logout">退出</button></span>
+          <span>欢迎 {{ $store.state.userInfo.adminname }} <button @click="handleLogout">退出</button></span>
         </el-header>
 
         <!-- 主体内容 -->
