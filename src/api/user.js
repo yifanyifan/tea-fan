@@ -1,250 +1,296 @@
-// 导入封装的axios
-import ajax from '@/utils/request';
-import ajaxOkx from '@/utils/requestOkx';
-import ajaxBinance from '@/utils/requestBinance';
+/**
+ * 用户相关API接口
+ * @module user
+ */
+
+import ajax from '@/utils/request'
+import ajaxOkx from '@/utils/requestOkx'
+import ajaxBinance from '@/utils/requestBinance'
 import request from '@/utils/request'
 
-// 管理系统登录接口的封装
-export function loginFn(params) {
-    return ajax({ 
-        method: 'POST',
-        url: '/sys/sso/login',
-        data: params,
-        headers: {
-            'content-type': 'multipart/form-data'
-        }
-    })
-}
-// 首页，获取用户信息
-export function getUserAll() {
-    return ajax({ 
-        method: 'GET',
-        url: '/sys/sso/info'
-    })
-}
+/**
+ * 认证相关接口
+ */
+export const authApi = {
+  /**
+   * 用户登录
+   * @param {Object} params - 登录参数
+   * @param {string} params.username - 用户名
+   * @param {string} params.password - 密码
+   * @returns {Promise} 登录结果
+   */
+  login: (params) => ajax({
+    method: 'POST',
+    url: '/sys/sso/login',
+    data: params,
+    headers: {
+      'content-type': 'multipart/form-data'
+    }
+  }),
 
-//=============================== 用户管理 ========================================================================
-// 分页列表
-export function adminList(urlSearch, data) {
-    return ajax({
-        url: '/sys/user/queryPageByParam',
-        method: 'POST',
-        urlSearch: urlSearch,
-        data: data,
-        headers: {
-            'content-type': 'application/json'
-        }
-    });
-}
-//添加用户
-export function addAdmin(params) {
-    return ajax({
-        url: '/sys/user/add',
-        method: 'POST',
-        data: params
-    });
-}
-//根据用户ID获取用户权限
-export function getRoleByUserId(params) {
-    return ajax({
-        url: '/sys/role/getRoleByUserId/id/'+params,
-        method: 'GET'
-    });
-}
-//删除用户
-export function deleteAdmin(params) {
-    return ajax({
-        url: '/sys/user/id/'+params,
-        method: 'DELETE',
-        data: params
-    });
-}
-
-
-//=============================== 角色管理 ========================================================================
-// 分页列表
-export function roleList(urlSearch, data) {
-    return ajax({
-        url: '/sys/role/queryPageByParam',
-        method: 'POST',
-        urlSearch: urlSearch,
-        data: data,
-        headers: {
-            'content-type': 'application/json'
-        }
-    });
-}
-//添加角色
-export function addRole(params) {
-    return ajax({
-        url: '/sys/role/add',
-        method: 'POST',
-        data: params
-    });
-}
-//角色列表
-export function roleAll(params) {
-    return ajax({
-        url: '/sys/role/queryByParam',
-        method: 'POST',
-        data: params
-    });
-}
-//根据角色ID获取已有菜单
-export function getPermissionByRoleId(params) {
-    return ajax({
-        url: '/sys/permission/getPermissionByRoleId/id/'+params,
-        method: 'GET'
-    });
-}
-//删除角色
-export function deleteRole(params) {
-    return ajax({
-        url: '/sys/role/id/'+params,
-        method: 'DELETE',
-        data: params
-    });
-}
-
-
-//=============================== 菜单管理 ========================================================================
-// 分页列表
-export function permissionList(urlSearch, data) {
-    return ajax({
-        url: '/sys/permission/queryPageByParam',
-        method: 'POST',
-        urlSearch: urlSearch,
-        data: data,
-        headers: {
-            'content-type': 'application/json'
-        }
-    });
-}
-//添加菜单
-export function addPermission(params) {
-    return ajax({
-        url: '/sys/permission/add',
-        method: 'POST',
-        data: params
-    });
-}
-//菜单列表
-export function permissionAll(params) {
-    return ajax({
-        url: '/sys/permission/queryByParam',
-        method: 'POST',
-        data: params
-    });
-}
-// 菜单列表（树结构）
-export function listTree(params) {
-    return ajax({
-        url: '/sys/permission/listTree',
-        method: 'POST',
-        data: params
-    });
-}
-//删除菜单
-export function deletePermission(params) {
-    return ajax({
-        url: '/sys/permission/id/'+params,
-        method: 'DELETE',
-        data: params
-    });
-}
-
-
-//=============================== 合约 ========================================================================
-//获取交易大数据支持币种 
-export function supportCoin() {
-    return ajaxOkx({
-        url: '/api/v5/rubik/stat/trading-data/support-coin',
-        method: 'GET'
-    });
-}
-
-//杠杆多空比 
-export function loanRatio(data) {
-    return ajaxOkx({
-        url: '/api/v5/rubik/stat/margin/loan-ratio',
-        method: 'GET',
-        data: data
-    });
-}
-
-//合约多空持仓人数比 
-export function longShortAccountRatio(data) {
-    return ajaxOkx({
-        url: '/api/v5/rubik/stat/contracts/long-short-account-ratio',
-        method: 'GET',
-        data: data
-    });
-}
-
-
-//=============================== Binance合约 ========================================================================
-//合约多空持仓人数比 
-export function longShortRatioByBinance(data) {
-    return ajaxBinance({
-        url: '/futures/data/globalLongShortAccountRatio',
-        method: 'GET',
-        data: data
-    });
-}
-
-
-//合约的未平仓合约量
-export function openInterestByBinance(data) {
-    return ajaxBinance({
-        url: '/futures/data/openInterest',
-        method: 'GET',
-        data: data
-    });
-}
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-//修改管理员
-export function updateAdmin(params) {
-    return ajax({
-        url: '/admin/update',
-        method: 'POST',
-        data: params
-    });
-}
-
-
-
-//获取用户列表
-export const getUserList = (params) => {
-    return request({
-        url: '/user/list',
-        method: 'get',
-        params
-    })
+  /**
+   * 获取用户信息
+   * @returns {Promise} 用户信息
+   */
+  getUserInfo: () => ajax({
+    method: 'GET',
+    url: '/sys/sso/info'
+  })
 }
 
 /**
- * 更新用户状态
- * @param {Object} data - 更新数据
- * @returns {Promise}
+ * 用户管理相关接口
  */
-export const updateUserStatus = (data) => {
-    return request({
-        url: '/user/status',
-        method: 'put',
-        data
-    })
+export const userApi = {
+  /**
+   * 获取用户列表（分页）
+   * @param {Object} urlSearch - URL查询参数
+   * @param {Object} data - 请求数据
+   * @returns {Promise} 用户列表
+   */
+  getList: (urlSearch, data) => ajax({
+    url: '/sys/user/queryPageByParam',
+    method: 'POST',
+    urlSearch,
+    data,
+    headers: {
+      'content-type': 'application/json'
+    }
+  }),
+
+  /**
+   * 添加用户
+   * @param {Object} params - 用户信息
+   * @returns {Promise} 添加结果
+   */
+  add: (params) => ajax({
+    url: '/sys/user/add',
+    method: 'POST',
+    data: params
+  }),
+
+  /**
+   * 获取用户角色
+   * @param {string} userId - 用户ID
+   * @returns {Promise} 角色信息
+   */
+  getRoles: (userId) => ajax({
+    url: `/sys/role/getRoleByUserId/id/${userId}`,
+    method: 'GET'
+  }),
+
+  /**
+   * 删除用户
+   * @param {string} userId - 用户ID
+   * @returns {Promise} 删除结果
+   */
+  delete: (userId) => ajax({
+    url: `/sys/user/id/${userId}`,
+    method: 'DELETE'
+  }),
+
+  /**
+   * 更新用户状态
+   * @param {Object} data - 更新数据
+   * @returns {Promise} 更新结果
+   */
+  updateStatus: (data) => request({
+    url: '/user/status',
+    method: 'put',
+    data
+  })
+}
+
+/**
+ * 角色管理相关接口
+ */
+export const roleApi = {
+  /**
+   * 获取角色列表（分页）
+   * @param {Object} urlSearch - URL查询参数
+   * @param {Object} data - 请求数据
+   * @returns {Promise} 角色列表
+   */
+  getList: (urlSearch, data) => ajax({
+    url: '/sys/role/queryPageByParam',
+    method: 'POST',
+    urlSearch,
+    data,
+    headers: {
+      'content-type': 'application/json'
+    }
+  }),
+
+  /**
+   * 添加角色
+   * @param {Object} params - 角色信息
+   * @returns {Promise} 添加结果
+   */
+  add: (params) => ajax({
+    url: '/sys/role/add',
+    method: 'POST',
+    data: params
+  }),
+
+  /**
+   * 获取所有角色
+   * @param {Object} params - 查询参数
+   * @returns {Promise} 角色列表
+   */
+  getAll: (params) => ajax({
+    url: '/sys/role/queryByParam',
+    method: 'POST',
+    data: params
+  }),
+
+  /**
+   * 获取角色权限
+   * @param {string} roleId - 角色ID
+   * @returns {Promise} 权限信息
+   */
+  getPermissions: (roleId) => ajax({
+    url: `/sys/permission/getPermissionByRoleId/id/${roleId}`,
+    method: 'GET'
+  }),
+
+  /**
+   * 删除角色
+   * @param {string} roleId - 角色ID
+   * @returns {Promise} 删除结果
+   */
+  delete: (roleId) => ajax({
+    url: `/sys/role/id/${roleId}`,
+    method: 'DELETE'
+  })
+}
+
+/**
+ * 权限管理相关接口
+ */
+export const permissionApi = {
+  /**
+   * 获取权限列表（分页）
+   * @param {Object} urlSearch - URL查询参数
+   * @param {Object} data - 请求数据
+   * @returns {Promise} 权限列表
+   */
+  getList: (urlSearch, data) => ajax({
+    url: '/sys/permission/queryPageByParam',
+    method: 'POST',
+    urlSearch,
+    data,
+    headers: {
+      'content-type': 'application/json'
+    }
+  }),
+
+  /**
+   * 添加权限
+   * @param {Object} params - 权限信息
+   * @returns {Promise} 添加结果
+   */
+  add: (params) => ajax({
+    url: '/sys/permission/add',
+    method: 'POST',
+    data: params
+  }),
+
+  /**
+   * 获取所有权限
+   * @param {Object} params - 查询参数
+   * @returns {Promise} 权限列表
+   */
+  getAll: (params) => ajax({
+    url: '/sys/permission/queryByParam',
+    method: 'POST',
+    data: params
+  }),
+
+  /**
+   * 获取权限树
+   * @param {Object} params - 查询参数
+   * @returns {Promise} 权限树
+   */
+  getTree: (params) => ajax({
+    url: '/sys/permission/listTree',
+    method: 'POST',
+    data: params
+  }),
+
+  /**
+   * 删除权限
+   * @param {string} permissionId - 权限ID
+   * @returns {Promise} 删除结果
+   */
+  delete: (permissionId) => ajax({
+    url: `/sys/permission/id/${permissionId}`,
+    method: 'DELETE'
+  })
+}
+
+/**
+ * 合约相关接口
+ */
+export const contractApi = {
+  /**
+   * 获取支持的币种
+   * @returns {Promise} 支持的币种列表
+   */
+  getSupportCoins: () => ajaxOkx({
+    url: '/api/v5/rubik/stat/trading-data/support-coin',
+    method: 'GET'
+  }),
+
+  /**
+   * 获取杠杆多空比
+   * @param {Object} data - 查询参数
+   * @returns {Promise} 多空比数据
+   */
+  getLoanRatio: (data) => ajaxOkx({
+    url: '/api/v5/rubik/stat/margin/loan-ratio',
+    method: 'GET',
+    data
+  }),
+
+  /**
+   * 获取合约多空持仓人数比
+   * @param {Object} data - 查询参数
+   * @returns {Promise} 多空持仓比数据
+   */
+  getLongShortAccountRatio: (data) => ajaxOkx({
+    url: '/api/v5/rubik/stat/contracts/long-short-account-ratio',
+    method: 'GET',
+    data
+  }),
+
+  /**
+   * 获取Binance合约多空持仓人数比
+   * @param {Object} data - 查询参数
+   * @returns {Promise} 多空持仓比数据
+   */
+  getLongShortRatioByBinance: (data) => ajaxBinance({
+    url: '/futures/data/globalLongShortAccountRatio',
+    method: 'GET',
+    data
+  }),
+
+  /**
+   * 获取Binance合约未平仓合约量
+   * @param {Object} data - 查询参数
+   * @returns {Promise} 未平仓合约量数据
+   */
+  getOpenInterestByBinance: (data) => ajaxBinance({
+    url: '/futures/data/openInterest',
+    method: 'GET',
+    data
+  })
+}
+
+// 导出所有API模块
+export default {
+  auth: authApi,
+  user: userApi,
+  role: roleApi,
+  permission: permissionApi,
+  contract: contractApi
 }
