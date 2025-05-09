@@ -3,10 +3,9 @@
  * @module user
  */
 
-import ajax from '@/utils/request'
-import ajaxOkx from '@/utils/requestOkx'
-import ajaxBinance from '@/utils/requestBinance'
-import request from '@/utils/request'
+import { request } from '@/utils/request'
+import { requestOkx } from '@/utils/requestOkx'
+import { requestBinance } from '@/utils/requestBinance'
 
 /**
  * 认证相关接口
@@ -17,9 +16,9 @@ export const authApi = {
    * @param {Object} params - 登录参数
    * @param {string} params.username - 用户名
    * @param {string} params.password - 密码
-   * @returns {Promise} 登录结果
+   * @returns {Promise<Object>} 登录结果
    */
-  login: (params) => ajax({
+  login: (params) => request({
     method: 'POST',
     url: '/sys/sso/login',
     data: params,
@@ -30,9 +29,9 @@ export const authApi = {
 
   /**
    * 获取用户信息
-   * @returns {Promise} 用户信息
+   * @returns {Promise<Object>} 用户信息
    */
-  getUserInfo: () => ajax({
+  getUserInfo: () => request({
     method: 'GET',
     url: '/sys/sso/info'
   })
@@ -48,7 +47,7 @@ export const userApi = {
    * @param {Object} data - 请求数据
    * @returns {Promise} 用户列表
    */
-  getList: (urlSearch, data) => ajax({
+  getList: (urlSearch, data) => request({
     url: '/sys/user/queryPageByParam',
     method: 'POST',
     urlSearch,
@@ -63,7 +62,7 @@ export const userApi = {
    * @param {Object} params - 用户信息
    * @returns {Promise} 添加结果
    */
-  add: (params) => ajax({
+  add: (params) => request({
     url: '/sys/user/add',
     method: 'POST',
     data: params
@@ -74,7 +73,7 @@ export const userApi = {
    * @param {string} userId - 用户ID
    * @returns {Promise} 角色信息
    */
-  getRoles: (userId) => ajax({
+  getRoles: (userId) => request({
     url: `/sys/role/getRoleByUserId/id/${userId}`,
     method: 'GET'
   }),
@@ -84,7 +83,7 @@ export const userApi = {
    * @param {string} userId - 用户ID
    * @returns {Promise} 删除结果
    */
-  delete: (userId) => ajax({
+  delete: (userId) => request({
     url: `/sys/user/id/${userId}`,
     method: 'DELETE'
   }),
@@ -111,7 +110,7 @@ export const roleApi = {
    * @param {Object} data - 请求数据
    * @returns {Promise} 角色列表
    */
-  getList: (urlSearch, data) => ajax({
+  getList: (urlSearch, data) => request({
     url: '/sys/role/queryPageByParam',
     method: 'POST',
     urlSearch,
@@ -126,7 +125,7 @@ export const roleApi = {
    * @param {Object} params - 角色信息
    * @returns {Promise} 添加结果
    */
-  add: (params) => ajax({
+  add: (params) => request({
     url: '/sys/role/add',
     method: 'POST',
     data: params
@@ -137,7 +136,7 @@ export const roleApi = {
    * @param {Object} params - 查询参数
    * @returns {Promise} 角色列表
    */
-  getAll: (params) => ajax({
+  getAll: (params) => request({
     url: '/sys/role/queryByParam',
     method: 'POST',
     data: params
@@ -148,7 +147,7 @@ export const roleApi = {
    * @param {string} roleId - 角色ID
    * @returns {Promise} 权限信息
    */
-  getPermissions: (roleId) => ajax({
+  getPermissions: (roleId) => request({
     url: `/sys/permission/getPermissionByRoleId/id/${roleId}`,
     method: 'GET'
   }),
@@ -158,7 +157,7 @@ export const roleApi = {
    * @param {string} roleId - 角色ID
    * @returns {Promise} 删除结果
    */
-  delete: (roleId) => ajax({
+  delete: (roleId) => request({
     url: `/sys/role/id/${roleId}`,
     method: 'DELETE'
   })
@@ -174,7 +173,7 @@ export const permissionApi = {
    * @param {Object} data - 请求数据
    * @returns {Promise} 权限列表
    */
-  getList: (urlSearch, data) => ajax({
+  getList: (urlSearch, data) => request({
     url: '/sys/permission/queryPageByParam',
     method: 'POST',
     urlSearch,
@@ -189,7 +188,7 @@ export const permissionApi = {
    * @param {Object} params - 权限信息
    * @returns {Promise} 添加结果
    */
-  add: (params) => ajax({
+  add: (params) => request({
     url: '/sys/permission/add',
     method: 'POST',
     data: params
@@ -200,7 +199,7 @@ export const permissionApi = {
    * @param {Object} params - 查询参数
    * @returns {Promise} 权限列表
    */
-  getAll: (params) => ajax({
+  getAll: (params) => request({
     url: '/sys/permission/queryByParam',
     method: 'POST',
     data: params
@@ -211,7 +210,7 @@ export const permissionApi = {
    * @param {Object} params - 查询参数
    * @returns {Promise} 权限树
    */
-  getTree: (params) => ajax({
+  getTree: (params) => request({
     url: '/sys/permission/listTree',
     method: 'POST',
     data: params
@@ -222,7 +221,7 @@ export const permissionApi = {
    * @param {string} permissionId - 权限ID
    * @returns {Promise} 删除结果
    */
-  delete: (permissionId) => ajax({
+  delete: (permissionId) => request({
     url: `/sys/permission/id/${permissionId}`,
     method: 'DELETE'
   })
@@ -236,7 +235,7 @@ export const contractApi = {
    * 获取支持的币种
    * @returns {Promise} 支持的币种列表
    */
-  getSupportCoins: () => ajaxOkx({
+  getSupportCoins: () => requestOkx({
     url: '/api/v5/rubik/stat/trading-data/support-coin',
     method: 'GET'
   }),
@@ -246,7 +245,7 @@ export const contractApi = {
    * @param {Object} data - 查询参数
    * @returns {Promise} 多空比数据
    */
-  getLoanRatio: (data) => ajaxOkx({
+  getLoanRatio: (data) => requestOkx({
     url: '/api/v5/rubik/stat/margin/loan-ratio',
     method: 'GET',
     data
@@ -257,7 +256,7 @@ export const contractApi = {
    * @param {Object} data - 查询参数
    * @returns {Promise} 多空持仓比数据
    */
-  getLongShortAccountRatio: (data) => ajaxOkx({
+  getLongShortAccountRatio: (data) => requestOkx({
     url: '/api/v5/rubik/stat/contracts/long-short-account-ratio',
     method: 'GET',
     data
@@ -268,7 +267,7 @@ export const contractApi = {
    * @param {Object} data - 查询参数
    * @returns {Promise} 多空持仓比数据
    */
-  getLongShortRatioByBinance: (data) => ajaxBinance({
+  getLongShortRatioByBinance: (data) => requestBinance({
     url: '/futures/data/globalLongShortAccountRatio',
     method: 'GET',
     data
@@ -279,7 +278,7 @@ export const contractApi = {
    * @param {Object} data - 查询参数
    * @returns {Promise} 未平仓合约量数据
    */
-  getOpenInterestByBinance: (data) => ajaxBinance({
+  getOpenInterestByBinance: (data) => requestBinance({
     url: '/futures/data/openInterest',
     method: 'GET',
     data

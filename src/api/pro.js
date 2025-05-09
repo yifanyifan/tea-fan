@@ -3,7 +3,7 @@
  * @module pro
  */
 
-import ajax from '@/utils/request'
+import { request } from '@/utils/request'
 
 /**
  * 商品API接口
@@ -21,7 +21,7 @@ export const proApi = {
    * @property {Array} list - 商品列表
    * @property {number} total - 总数量
    */
-  getList: (params) => ajax({
+  getList: (params) => request({
     url: '/pro/list',
     method: 'GET',
     params
@@ -33,7 +33,7 @@ export const proApi = {
    * @param {number} id - 商品ID
    * @returns {Promise<Object>} 商品详情
    */
-  getDetail: (id) => ajax({
+  getDetail: (id) => request({
     url: `/pro/detail/${id}`,
     method: 'GET'
   }),
@@ -49,7 +49,7 @@ export const proApi = {
    * @param {string} data.image - 商品图片
    * @returns {Promise<Object>} 添加结果
    */
-  add: (data) => ajax({
+  add: (data) => request({
     url: '/pro/add',
     method: 'POST',
     data
@@ -66,7 +66,7 @@ export const proApi = {
    * @param {string} [data.category] - 商品分类
    * @returns {Promise<Object>} 更新结果
    */
-  update: (data) => ajax({
+  update: (data) => request({
     url: '/pro/update',
     method: 'PUT',
     data
@@ -78,7 +78,7 @@ export const proApi = {
    * @param {number} id - 商品ID
    * @returns {Promise<Object>} 删除结果
    */
-  delete: (id) => ajax({
+  delete: (id) => request({
     url: `/pro/delete/${id}`,
     method: 'DELETE'
   })

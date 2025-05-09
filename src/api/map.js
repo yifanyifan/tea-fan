@@ -3,7 +3,7 @@
  * @module map
  */
 
-import request from '@/utils/request'
+import { request } from '@/utils/request'
 
 /**
  * 地图API接口
@@ -19,7 +19,7 @@ export const mapApi = {
    */
   getData: () => request({
     url: '/map/data',
-    method: 'get'
+    method: 'GET'
   }),
 
   /**
@@ -30,7 +30,7 @@ export const mapApi = {
    */
   getRegionDetail: (regionId) => request({
     url: `/map/region/${regionId}`,
-    method: 'get'
+    method: 'GET'
   }),
 
   /**
@@ -41,7 +41,7 @@ export const mapApi = {
    */
   updateMarker: (marker) => request({
     url: '/map/marker',
-    method: 'put',
+    method: 'PUT',
     data: marker
   })
 }

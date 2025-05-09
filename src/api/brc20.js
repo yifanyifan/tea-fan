@@ -3,7 +3,7 @@
  * @module brc20
  */
 
-import request from '@/utils/request'
+import { request } from '@/utils/request'
 
 /**
  * BRC20 API接口
@@ -20,7 +20,7 @@ export const brc20Api = {
    */
   getData: () => request({
     url: '/brc20/data',
-    method: 'get'
+    method: 'GET'
   }),
 
   /**
@@ -37,7 +37,7 @@ export const brc20Api = {
    */
   getInscriptions: (params) => request({
     url: '/inscriptions/list',
-    method: 'get',
+    method: 'GET',
     params
   }),
 
@@ -49,7 +49,7 @@ export const brc20Api = {
    */
   getTokenDetail: (token) => request({
     url: `/brc20/token/${token}`,
-    method: 'get'
+    method: 'GET'
   }),
 
   /**
@@ -63,7 +63,7 @@ export const brc20Api = {
    */
   getHolders: (token, params) => request({
     url: `/brc20/holders/${token}`,
-    method: 'get',
+    method: 'GET',
     params
   })
 }

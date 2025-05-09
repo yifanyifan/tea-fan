@@ -3,7 +3,7 @@
  * @module banner
  */
 
-import ajax from '@/utils/request'
+import { request } from '@/utils/request'
 
 /**
  * 轮播图API接口
@@ -20,7 +20,7 @@ export const bannerApi = {
    * @property {number} sort - 排序
    * @property {string} status - 状态
    */
-  getList: () => ajax({
+  getList: () => request({
     url: '/banner/list',
     method: 'GET'
   }),
@@ -35,7 +35,7 @@ export const bannerApi = {
    * @param {number} data.sort - 排序
    * @returns {Promise<Object>} 添加结果
    */
-  add: (data) => ajax({
+  add: (data) => request({
     url: '/banner/add',
     method: 'POST',
     data
@@ -53,7 +53,7 @@ export const bannerApi = {
    * @param {string} [data.status] - 状态
    * @returns {Promise<Object>} 更新结果
    */
-  update: (data) => ajax({
+  update: (data) => request({
     url: '/banner/update',
     method: 'PUT',
     data
@@ -65,7 +65,7 @@ export const bannerApi = {
    * @param {number} id - 轮播图ID
    * @returns {Promise<Object>} 删除结果
    */
-  delete: (id) => ajax({
+  delete: (id) => request({
     url: `/banner/delete/${id}`,
     method: 'DELETE'
   }),
@@ -78,7 +78,7 @@ export const bannerApi = {
    * @param {string} data.status - 新状态
    * @returns {Promise<Object>} 更新结果
    */
-  updateStatus: (data) => ajax({
+  updateStatus: (data) => request({
     url: '/banner/status',
     method: 'PUT',
     data

@@ -3,7 +3,7 @@
  * @module chart
  */
 
-import request from '@/utils/request'
+import { request } from '@/utils/request'
 
 /**
  * 图表API接口
@@ -22,7 +22,7 @@ export const chartApi = {
    */
   getData: (params) => request({
     url: '/chart/data',
-    method: 'get',
+    method: 'GET',
     params
   }),
 
@@ -34,7 +34,7 @@ export const chartApi = {
    */
   getConfig: (type) => request({
     url: `/chart/config/${type}`,
-    method: 'get'
+    method: 'GET'
   }),
 
   /**
@@ -47,7 +47,7 @@ export const chartApi = {
    */
   getStatistics: (params) => request({
     url: '/chart/statistics',
-    method: 'get',
+    method: 'GET',
     params
   })
 }

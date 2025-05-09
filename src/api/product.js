@@ -3,7 +3,7 @@
  * @module product
  */
 
-import request from '@/utils/request'
+import { request } from '@/utils/request'
 
 /**
  * 产品API接口
@@ -24,7 +24,7 @@ export const productApi = {
    */
   getList: (params) => request({
     url: '/product/list',
-    method: 'get',
+    method: 'GET',
     params
   }),
 
@@ -41,7 +41,7 @@ export const productApi = {
    */
   add: (data) => request({
     url: '/product/add',
-    method: 'post',
+    method: 'POST',
     data
   }),
 
@@ -55,7 +55,7 @@ export const productApi = {
    */
   updateStatus: (data) => request({
     url: '/product/status',
-    method: 'put',
+    method: 'PUT',
     data
   }),
 
@@ -67,7 +67,7 @@ export const productApi = {
    */
   delete: (id) => request({
     url: `/product/delete/${id}`,
-    method: 'delete'
+    method: 'DELETE'
   }),
 
   /**
@@ -78,7 +78,7 @@ export const productApi = {
    */
   getDetail: (id) => request({
     url: `/product/detail/${id}`,
-    method: 'get'
+    method: 'GET'
   }),
 
   /**
@@ -93,7 +93,7 @@ export const productApi = {
    */
   update: (data) => request({
     url: '/product/update',
-    method: 'put',
+    method: 'PUT',
     data
   })
 }
