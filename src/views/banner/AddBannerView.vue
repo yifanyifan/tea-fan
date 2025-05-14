@@ -133,7 +133,7 @@ const resetForm = () => {
         <el-form-item label="图片" prop="imageUrl">
           <el-upload
             class="banner-uploader"
-            :action="`${import.meta.env.VITE_API_URL}/upload`"
+            :action="'/upload'"
             :show-file-list="false"
             :on-success="handleUploadSuccess"
             :before-upload="beforeUpload"

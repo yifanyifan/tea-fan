@@ -4,7 +4,7 @@ import { useRouter } from 'vue-router'
 import { useStore } from 'vuex'
 import { ElMessage } from 'element-plus'
 import md5 from 'md5'
-import { loginFn } from '@/api/user'
+import loginFn from '@/api/user'
 
 export default {
   name: 'LoginView',

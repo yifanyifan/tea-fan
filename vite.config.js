@@ -23,5 +23,13 @@ export default defineConfig({
       '@': fileURLToPath(new URL('./src', import.meta.url)),
       'tea-cll': 'path/to/tea-cll'
     }
+  },
+  server: {
+    proxy: {
+      '/upload': {
+        target: 'http://localhost:3000',
+        changeOrigin: true
+      }
+    }
   }
 })

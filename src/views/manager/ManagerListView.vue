@@ -1,10 +1,9 @@
 <script setup>
 import { ref, onMounted } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
-import { adminList, addAdmin, updateAdmin, deleteAdmin } from '@/api/user'
+import { userApi, roleApi } from '@/api/user'
 import { routes } from '@/router/index.js'
 import { now } from 'lodash'
-import { roleAll, getRoleByUserId } from '../../api/user'
 
 // 表格数据
 const tableData = ref([])
@@ -61,21 +60,26 @@ const rules = {
 /**
  * 获取管理员列表
  */
-const fetchList = async () => {
+const fetchAdminList = async () => {
   try {
     loading.value = true
-    // const res = await getManagerList({
-    //   ...searchForm.value,
-    //   page: pagination.value.currentPage,
-    //   size: pagination.value.pageSize
-    // })
-    // tableData.value = res.data.list
-    // pagination.value.total = res.data.total
+    const res = await userApi.getList()
+    tableData.value = res.data
   } catch (error) {
-    console.error('获取列表失败:', error)
-    ElMessage.error('获取列表失败')
+    console.error('获取管理员列表失败:', error)
+    ElMessage.error('获取管理员列表失败')
   } finally {
     loading.value = false
+  }
+}
+
+const fetchRoleList = async () => {
+  try {
+    const res = await roleApi.getAll()
+    roleOptions.value = res.data
+  } catch (error) {
+    console.error('获取角色列表失败:', error)
+    ElMessage.error('获取角色列表失败')
   }
 }
 
@@ -83,11 +87,14 @@ const fetchList = async () => {
  * 处理添加/编辑
  * @param {Object} row - 行数据（编辑时传入）
  */
-const handleEdit = (row = null) => {
+const handleEdit = async (row = null) => {
   dialogTitle.value = row ? '编辑管理员' : '添加管理员'
   if (row) {
-    formData.value = { ...row }
-    formData.value.password = '' // 编辑时不显示密码
+    const roleRes = await roleApi.getRoles(row.id)
+    formData.value = { 
+      ...row,
+      roles: roleRes.data.map(role => role.id)
+    }
   } else {
     formData.value = {
       username: '',
@@ -110,11 +117,11 @@ const submitForm = async () => {
   
   try {
     await formRef.value.validate()
-    // const api = formData.value.id ? updateManager : addManager
-    // await api(formData.value)
+    const api = formData.value.id ? userApi.update : userApi.add
+    await api(formData.value)
     ElMessage.success(`${dialogTitle.value}成功`)
     dialogVisible.value = false
-    fetchList()
+    fetchAdminList()
   } catch (error) {
     console.error('提交失败:', error)
     ElMessage.error('提交失败')
@@ -130,9 +137,9 @@ const handleDelete = async (id) => {
     await ElMessageBox.confirm('确认删除该管理员吗？', '提示', {
       type: 'warning'
     })
-    // await deleteManager(id)
+    await userApi.delete(id)
     ElMessage.success('删除成功')
-    fetchList()
+    fetchAdminList()
   } catch (error) {
     if (error !== 'cancel') {
       console.error('删除失败:', error)
@@ -142,7 +149,7 @@ const handleDelete = async (id) => {
 }
 
 // 页面加载时获取数据
-onMounted(fetchList)
+onMounted(fetchAdminList)
 </script>
 
 <template>
@@ -155,7 +162,7 @@ onMounted(fetchList)
             v-model="searchForm.username"
             placeholder="请输入用户名"
             clearable
-            @keyup.enter="fetchList"
+            @keyup.enter="fetchAdminList"
           />
         </el-form-item>
         <el-form-item label="状态">
@@ -165,7 +172,7 @@ onMounted(fetchList)
           </el-select>
         </el-form-item>
         <el-form-item>
-          <el-button type="primary" @click="fetchList">查询</el-button>
+          <el-button type="primary" @click="fetchAdminList">查询</el-button>
           <el-button @click="searchForm = {}">重置</el-button>
         </el-form-item>
       </el-form>
@@ -231,8 +238,8 @@ onMounted(fetchList)
           :total="pagination.total"
           :page-sizes="[10, 20, 50, 100]"
           layout="total, sizes, prev, pager, next"
-          @size-change="fetchList"
-          @current-change="fetchList"
+          @size-change="fetchAdminList"
+          @current-change="fetchAdminList"
         />
       </div>
     </el-card>

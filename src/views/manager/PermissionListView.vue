@@ -1,10 +1,9 @@
 <script>
-import { permissionList, addAdmin, updateAdmin, deletePermission, permissionAll, addPermission } from '@/api/user'
-
-import { routes } from '@/router/index.js'
-import { ElMessage, ElMessageBox } from 'element-plus'
-import { now } from 'lodash'
 import { ref, onMounted } from 'vue'
+import { ElMessage, ElMessageBox } from 'element-plus'
+import { permissionApi } from '@/api/user'
+import { routes } from '@/router/index.js'
+import { now } from 'lodash'
 
 export default {
     setup() {
@@ -49,8 +48,8 @@ export default {
         const fetchPermissionList = async () => {
             try {
                 loading.value = true
-                // const res = await getPermissionList()
-                // tableData.value = res.data
+                const res = await permissionApi.getList()
+                tableData.value = res.data
             } catch (error) {
                 console.error('获取权限列表失败:', error)
                 ElMessage.error('获取权限列表失败')
@@ -89,8 +88,8 @@ export default {
             
             try {
                 await formRef.value.validate()
-                // const api = formData.value.id ? updatePermission : addPermission
-                // await api(formData.value)
+                const api = formData.value.id ? permissionApi.update : permissionApi.add
+                await api(formData.value)
                 ElMessage.success(`${dialogTitle.value}成功`)
                 dialogVisible.value = false
                 fetchPermissionList()
@@ -109,7 +108,7 @@ export default {
                 await ElMessageBox.confirm('确认删除该权限吗？', '提示', {
                     type: 'warning'
                 })
-                // await deletePermission(id)
+                await permissionApi.delete(id)
                 ElMessage.success('删除成功')
                 fetchPermissionList()
             } catch (error) {

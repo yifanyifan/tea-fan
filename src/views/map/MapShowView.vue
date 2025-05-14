@@ -3,7 +3,9 @@ import { ref, onMounted, onBeforeUnmount } from 'vue'
 import { ElMessage } from 'element-plus'
 import * as echarts from 'echarts'
 // 引入中国地图数据
-import 'echarts/map/js/china'
+import { registerMap } from 'echarts'
+import chinaJson from '@/assets/map/china.json'
+registerMap('china', chinaJson)
 
 // 图表实例引用
 const chartRef = ref(null)

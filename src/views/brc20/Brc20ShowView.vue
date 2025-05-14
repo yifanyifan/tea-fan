@@ -2,7 +2,7 @@
 import { ref, onMounted, onBeforeUnmount } from 'vue'
 import * as echarts from 'echarts'
 import { ElMessage } from 'element-plus'
-import { getBrc20List } from '@/api/brc20' // 假设有这个API
+import { contractApi } from '@/api/user'
 
 // 图表实例引用
 const chartRef = ref(null)
@@ -110,6 +110,19 @@ const fetchTokenData = async () => {
   } catch (error) {
     console.error('获取数据失败:', error)
     ElMessage.error('获取数据失败')
+  } finally {
+    loading.value = false
+  }
+}
+
+const fetchBrc20List = async () => {
+  try {
+    loading.value = true
+    const res = await contractApi.getSupportCoins()
+    tableData.value = res.data
+  } catch (error) {
+    console.error('获取 BRC20 列表失败:', error)
+    ElMessage.error('获取 BRC20 列表失败')
   } finally {
     loading.value = false
   }

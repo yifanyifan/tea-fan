@@ -3,9 +3,9 @@
  * @module user
  */
 
-import { request } from '@/utils/request'
-import { requestOkx } from '@/utils/requestOkx'
-import { requestBinance } from '@/utils/requestBinance'
+import request from '@/utils/request'
+import requestOkx from '@/utils/requestOkx'
+import requestBinance from '@/utils/requestBinance'
 
 /**
  * 认证相关接口

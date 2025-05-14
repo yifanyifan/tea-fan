@@ -3,7 +3,7 @@
  * @module brc20
  */
 
-import { request } from '@/utils/request'
+import request from '@/utils/request'
 
 /**
  * BRC20 API接口

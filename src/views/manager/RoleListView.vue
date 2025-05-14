@@ -1,7 +1,7 @@
 <script setup>
 import { ref, onMounted } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
-import { roleList, addRole, listTree, updateAdmin, deleteRole, getPermissionByRoleId } from '@/api/user'
+import { roleApi, permissionApi } from '@/api/user'
 import { routes } from '@/router/index.js'
 import { now } from 'lodash'
 
@@ -45,7 +45,7 @@ const rules = {
 const fetchRoleList = async () => {
   try {
     loading.value = true
-    const res = await roleList()
+    const res = await roleApi.getList()
     tableData.value = res.data
   } catch (error) {
     console.error('获取角色列表失败:', error)
@@ -60,7 +60,7 @@ const fetchRoleList = async () => {
  */
 const fetchPermissionTree = async () => {
   try {
-    const res = await listTree()
+    const res = await permissionApi.getTree()
     permissionTree.value = res.data
   } catch (error) {
     console.error('获取权限树失败:', error)
@@ -98,7 +98,7 @@ const submitForm = async () => {
   
   try {
     await formRef.value.validate()
-    const api = formData.value.id ? updateAdmin : addRole
+    const api = formData.value.id ? roleApi.update : roleApi.add
     await api(formData.value)
     ElMessage.success(`${dialogTitle.value}成功`)
     dialogVisible.value = false
@@ -118,7 +118,7 @@ const handleDelete = async (id) => {
     await ElMessageBox.confirm('确认删除该角色吗？', '提示', {
       type: 'warning'
     })
-    await deleteRole(id)
+    await roleApi.delete(id)
     ElMessage.success('删除成功')
     fetchRoleList()
   } catch (error) {
